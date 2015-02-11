@@ -3,7 +3,7 @@ import numpy as np
 
 run_location= "G:/Projects/CRISP/Dataset_Analysis/CRISP_Runs"
 prioritization_layer = "G:/Projects/CRISP/Dataset_Analysis/WeedData_ClackamasBasin.mdb/CRISP_Weed_Observations_OregonSP"
-WHIPPET_scores = "G:/Projects/CRISP/Whippet Support/species_scores.csv"#"G:/Projects/CRISP/Whippet Support/WHIPPET_Scores_withSelection.csv"#"G:/Tools/Whippet/WHIPPET Score Calculator v1.2 2014.12.30.csv"
+WHIPPET_scores = "G:/Projects/CRISP/Whippet Support/species_scores.csv"
 projection = prioritization_layer
 re_run = False
 report_templates = "G:/Projects/CRISP/Whippet Support/"
@@ -30,40 +30,24 @@ def score_using_breaks (value, breaks):
             return criteria[0]
         if value < criteria[1]:
             return criteria[0]
-    return 9999999999999999999999
+    return False
 
 def calculate_scores(source_layer, target_layer,layer_name,breaks):
     try:
-        print "running near analysis"
         arcpy.Near_analysis(source_layer,target_layer)
-        print "running add field"
         arcpy.AddField_management(source_layer,layer_name+"_score","SHORT")
-        print "running delete field"
         arcpy.DeleteField_management (source_layer,"NEAR_FID")
         
-        print "iterating, calculating, and updating by row"
-
         weeds = arcpy.UpdateCursor(source_layer)
         for weed in weeds:
-#             dist =  weed.getValue("NEAR_DIST")
-#             value = 999999999
-#             for criteria in breaks:
-#                 if len(criteria)==1:#last option
-#                     value = criteria[0]
-#                     break
-#                 if dist < criteria[1]:
-#                     value = criteria[0]
-#                     break
-        
             weed.setValue(layer_name+"_score",score_using_breaks(weed.getValue("NEAR_DIST"), breaks) )
             weeds.updateRow(weed)
         
-        print "delete field"
-        arcpy.DeleteField_management (source_layer,"NEAR_DIST")#arcpy.DeleteField_management (source_layer,"NEAR_DIST")
+        arcpy.DeleteField_management (source_layer,"NEAR_DIST")
         del weed, weeds
-        print "done"
+        
     except:
-       print arcpy.GetMessages()
+        print arcpy.GetMessages()
 
 comparison_layers = {
                      'streets':{
