@@ -70,8 +70,16 @@ def vector_scored (risk_scores,weights,values):
 
 def calculate_scores(source_layer, target_layer,layer_name,breaks):
     try:
+        fields = []
+        fieldList = arcpy.ListFields(source_layer)
+        for field in fieldList:
+            fields.append(field.name)
+            
         arcpy.Near_analysis(source_layer,target_layer)
-        arcpy.AddField_management(source_layer,layer_name+"_score","SHORT")
+        
+        if not layer_name+"_score" in fields:
+            arcpy.AddField_management(source_layer,layer_name+"_score","SHORT")
+            
         arcpy.DeleteField_management (source_layer,"NEAR_FID")
         
         weeds = arcpy.UpdateCursor(source_layer)
@@ -132,7 +140,7 @@ class Whippet_python(object):
             parameterType="Required",
             direction="Input")
         
-        param8 = arcpy.Parameter(
+        param9 = arcpy.Parameter(
             displayName="Population Breaks",
             name="population_breaks",
             datatype="GPString",
@@ -196,30 +204,17 @@ class Whippet_python(object):
         
         param7.defaultEnvironmentName="semi-fine (miles)"
         param7.filter.list=['coarse (miles)',
-                         'semi-coarse (miles)',
-                         'semi-fine (miles)',
-                         'conspecifics semi-fine (miles)',
-                         'fine (miles)',
-                         'coarse (acres)',
-                         'fine (acres)']  
+                             'semi-coarse (miles)',
+                             'semi-fine (miles)',
+                             'fine (miles)']  
         
         param8.defaultEnvironmentName='conspecifics semi-fine (miles)'
-        param8.filter.list=['coarse (miles)',
-                         'semi-coarse (miles)',
-                         'semi-fine (miles)',
-                         'conspecifics semi-fine (miles)',
-                         'fine (miles)',
-                         'coarse (acres)',
-                         'fine (acres)']    
+        param8.filter.list=['conspecifics coarse (miles)','conspecifics semi-fine (miles)']    
          
         param9.defaultEnvironmentName='fine (acres)'
-        param9.filter.list=['coarse (miles)',
-                         'semi-coarse (miles)',
-                         'semi-fine (miles)',
-                         'conspecifics semi-fine (miles)',
-                         'fine (miles)',
-                         'coarse (acres)',
-                         'fine (acres)']                                      
+        param9.filter.list=['coarse (acres)',
+                            'fine (acres)'] 
+                                                              
         
         params = [param0, param1, param2,param8,param9, param3,param4, param5, param6,param7,param10]
     
@@ -278,6 +273,11 @@ class Whippet_python(object):
                                    [3,.1],
                                    [6,1],
                                    [10]],
+                         'conspecifics coarse (miles)':[[0,.1],
+                                   [1,.1],
+                                   [3,.10],
+                                   [6,25],
+                                   [10]],
                          'fine (miles)':[[10,.001],
                                    [6,.01],
                                    [3,.1],
@@ -323,11 +323,9 @@ class Whippet_python(object):
                     risk_scores[row[0]]=row[2:]
         
         if re_run == False:
-            
             #===============================================================================
             # generate run location
             #===============================================================================
-            
             timestring=str(int(time.time())).replace(" ", "_").replace("-", "_")
             
             Geodb_folder = run_location + "/" + timestring
@@ -343,7 +341,6 @@ class Whippet_python(object):
             #===========================================================================
             # create filegeodb
             #===========================================================================
-            
             arcpy.CreateFileGDB_management(Geodb_folder,"Prioritize_the_WeedWise")
             out_gdb = Geodb_folder + "/Prioritize_the_WeedWise.gdb"
             
@@ -355,13 +352,11 @@ class Whippet_python(object):
             arcpy.MakeFeatureLayer_management(out_gdb+"/weed_points_orig", "weed_points2",sql)
             arcpy.CopyFeatures_management("weed_points2",out_gdb+"/weed_points")
             prioritization_layer= out_gdb+"/weed_points"
-            print "using layer: " + prioritization_layer
-            
+            #print "using layer: " + prioritization_layer
             
             #===============================================================================
             # generate values
             #===============================================================================
-        
             for layer in comparison_layers:
                 print layer + "\n"
                 if layer == 'conspecifics':
@@ -377,7 +372,7 @@ class Whippet_python(object):
                         arcpy.MakeFeatureLayer_management(prioritization_layer,risk_assessed, "\"" + scientific_fieldname + "\" = '"+risk_assessed_raw+"'","in_memory")
                         result = arcpy.GetCount_management(risk_assessed)
                         if int(result.getOutput(0)) >0:
-                            calculate_scores(risk_assessed,risk_assessed,risk_assessed, break_options[comparison_layers[layer]['breaks']])
+                            calculate_scores(risk_assessed,risk_assessed, "conspecific", break_options[comparison_layers[layer]['breaks']])
                             print "        valid for this dataset\n"
                         else:
                             print "        not valid due to lack of points"
@@ -428,11 +423,8 @@ class Whippet_python(object):
         #===============================================================================
         # calculate population scores for each row
         #===============================================================================
-        
-            
-        print "calculating final scores"
-        
-        final_scores ={}
+#         print "calculating final scores"
+        final_scores ={} #for reporting, below
         
         if re_run == False:
             arcpy.AddField_management(prioritization_layer,"WHIPPET_score_overall","FLOAT")
@@ -440,61 +432,51 @@ class Whippet_python(object):
             arcpy.AddField_management(prioritization_layer,"WHIPPET_feasibility_score","FLOAT")
             arcpy.AddField_management(prioritization_layer,"WHIPPET_impact_score","FLOAT")
         
-        fields = []
-        fieldList = arcpy.ListFields(prioritization_layer)
-        for field in fieldList:
-            fields.append(field.name)
-            
         weeds = arcpy.UpdateCursor(prioritization_layer)
         
         for weed in weeds:
-            conspecific_score = weed.getValue(scientific_fieldname)
-            conspecific_score = conspecific_score.replace(" ","_")
-            conspecific_score = conspecific_score.replace(".","") + "_score"
+            if weed.isNull('conspecific_score'):
+                continue
             
-            if  conspecific_score in fields:
-                if weed.isNull(conspecific_score):
-                    continue
+            weed_name = weed.getValue(scientific_fieldname)
+            if weed.isNull(patch_size_fieldname):
+                population_size = 3
+            else:
+                population_size = score_using_breaks(weed.getValue(patch_size_fieldname),break_options[population_breaks],43560)
                 
-                weed_name = weed.getValue(scientific_fieldname)
-                if weed.isNull(patch_size_fieldname):
-                    population_size = 3
-                else:
-                    population_size = score_using_breaks(weed.getValue(patch_size_fieldname),break_options[population_breaks],43560)
-                    
-                
-                impact_score =( weights['impact'] * ( weights['impact_to_wildlands'] * int(risk_scores[weed_name][1]) + 
-                                                  weights['site_value'] *(   weights['oaks'] * weed.getValue("oaks_score") + 
-                                                                             weights['t_and_e'] * weed.getValue("t_and_e_score") + 
-                                                                             weights['priority_sites'] * weed.getValue("priority_sites_score") + 
-                                                                             weights['partner_projects'] * weed.getValue("partner_projects_score") ))) 
-                
-                #is this valid, or is the simpler option better?
-                vector_score= vector_scored(risk_scores[weed_name],weights,{'streets':weed.getValue("streets_score"),'rivers':weed.getValue("streams_score"),'mines':weed.getValue("mines_score")})
-                
-                invasiveness_score = (weights['invasiveness'] *  ( weights['conspecifics'] * weed.getValue(conspecific_score) + 
-                                                         weights['rate_of_spread'] * int(risk_scores[weed_name][3]) + 
-                                                         weights['distance'] * vector_score ))
-                
-                
-                feasibility_score =  (weights['feasibility'] *   (weights['population_size'] * population_size + 
-                                                        weights['reproductive_ability'] * int(risk_scores[weed_name][5]) + 
-                                                        weights['detectablility'] * int(risk_scores[weed_name][6]) + 
-                                                        weights['accessibility'] * 3 + 
-                                                        weights['control_effectiveness'] * int(risk_scores[weed_name][8]) + 
-                                                        weights['control_cost'] * int(risk_scores[weed_name][10])  ))
-        
-                score = impact_score + invasiveness_score + feasibility_score
-                
-                if not weed_name in final_scores:  #setting up data structure for below report
-                    final_scores[weed_name]=[]
-                final_scores[weed_name].append(score)
-                
-                weed.setValue("WHIPPET_score_overall",score)
-                weed.setValue("WHIPPET_invasiveness_score",invasiveness_score)
-                weed.setValue("WHIPPET_feasibility_score",feasibility_score)
-                weed.setValue("WHIPPET_impact_score",impact_score)
-                weeds.updateRow(weed)
+            
+            impact_score =( weights['impact'] * ( weights['impact_to_wildlands'] * int(risk_scores[weed_name][1]) + 
+                                              weights['site_value'] *(   weights['oaks'] * weed.getValue("oaks_score") + 
+                                                                         weights['t_and_e'] * weed.getValue("t_and_e_score") + 
+                                                                         weights['priority_sites'] * weed.getValue("priority_sites_score") + 
+                                                                         weights['partner_projects'] * weed.getValue("partner_projects_score") ))) 
+            
+            #is this valid, or is the simpler option better?
+            vector_score= vector_scored(risk_scores[weed_name],weights,{'streets':weed.getValue("streets_score"),'rivers':weed.getValue("streams_score"),'mines':weed.getValue("mines_score")})
+            
+            invasiveness_score = (weights['invasiveness'] *  ( weights['conspecifics'] * weed.getValue('conspecific_score') + 
+                                                     weights['rate_of_spread'] * int(risk_scores[weed_name][3]) + 
+                                                     weights['distance'] * vector_score ))
+            
+            
+            feasibility_score =  (weights['feasibility'] *   (weights['population_size'] * population_size + 
+                                                    weights['reproductive_ability'] * int(risk_scores[weed_name][5]) + 
+                                                    weights['detectablility'] * int(risk_scores[weed_name][6]) + 
+                                                    weights['accessibility'] * 3 + 
+                                                    weights['control_effectiveness'] * int(risk_scores[weed_name][8]) + 
+                                                    weights['control_cost'] * int(risk_scores[weed_name][10])  ))
+    
+            score = impact_score + invasiveness_score + feasibility_score
+            
+            if not weed_name in final_scores:  #setting up data structure for below report
+                final_scores[weed_name]=[]
+            final_scores[weed_name].append(score)
+            
+            weed.setValue("WHIPPET_score_overall",score)
+            weed.setValue("WHIPPET_invasiveness_score",invasiveness_score)
+            weed.setValue("WHIPPET_feasibility_score",feasibility_score)
+            weed.setValue("WHIPPET_impact_score",impact_score)
+            weeds.updateRow(weed)
         
         #===============================================================================
         # develop charts
