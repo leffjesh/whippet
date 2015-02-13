@@ -5,9 +5,8 @@ run_location= "G:/Projects/CRISP/Dataset_Analysis/CRISP_Runs"
 prioritization_layer = "G:/Projects/CRISP/Dataset_Analysis/WeedData_ClackamasBasin.mdb/CRISP_Weed_Observations_OregonSP"
 WHIPPET_scores = "G:/Projects/CRISP/Whippet Support/species_scores.csv"
 projection = prioritization_layer
-re_run = False
+re_run = True
 report_templates = "G:/Projects/CRISP/Whippet Support/"
-
 
 def edit_report(report_name, output_dir, replacements, new_report_name=None):
     f = open(report_templates + "/" + report_name + ".html")
@@ -31,6 +30,29 @@ def score_using_breaks (value, breaks):
         if value < criteria[1]:
             return criteria[0]
     return False
+
+def vector_scored (risk_scores,weights,values):
+    # vector scores are only valid if this species is affect by the associated vector
+    # here we are re-calculating the weights based on what vectors are valid for this species.
+    #    e.g. if rivers are the only valid vector then don't weight it, just return that score
+    # I'm not sure if this methodology is valid or if we should just ignore scores with when a given vector is invalid (i.e. set that vector score to 0)
+    
+    score = 0
+    vectors = []
+    if risk_scores[weed_name][11] == "yes":
+        vectors.append("streets")
+    if risk_scores[weed_name][12] == "yes":
+        vectors.append("rivers")
+    if risk_scores[weed_name][13] == "yes":
+        vectors.append("mines")
+    
+    total = sum(map(lambda x: weights[x], vectors))
+    
+    for vector in vectors:
+        weights[vector]=weights[vector]/total
+        score = score + weights[vector] * values[vector]
+    
+    return score
 
 def calculate_scores(source_layer, target_layer,layer_name,breaks):
     try:
@@ -123,18 +145,14 @@ comparison_layers = {
                      }
 
 #===============================================================================
-# test for units?
-#===============================================================================
-
-#===============================================================================
 # get information on WHIPPET values
 #===============================================================================
 with open(WHIPPET_scores,'rb') as file:
     contents = csv.reader(file)
     risk_scores={}
     for row in contents:
-        if row[1] != "Species Name" and row[1]:#column header
-            risk_scores[row[1]]=row[2:]
+        if row[0] != "scientificname" and row[0] and row[1] == "TRUE":#column header and species defined
+            risk_scores[row[0]]=row[2:]
 
 if re_run == False:
     
@@ -164,11 +182,16 @@ if re_run == False:
     
     
     #===========================================================================
-    # copy prioritization layer into new geodb
+    # copy prioritization layer into new geodb, filter out only relevant species records
     #===========================================================================
     arcpy.CopyFeatures_management(prioritization_layer,out_gdb+"/weed_points_orig")
-    arcpy.MakeFeatureLayer_management(prioritization_layer, "weed_points", )
-    arcpy.CopyFeatures_management(prioritization_layer,out_gdb+"/weed_points")
+    sql = " OR ".join(map(lambda x: "\"scientificname\" = '" + x + "'", risk_scores.keys()))
+    arcpy.MakeFeatureLayer_management(out_gdb+"/weed_points_orig", "weed_points2",sql)
+#     arcpy.SelectLayerByAttribute_management("weed_points2","NEW_SELECTION",sql)
+#     result = arcpy.GetCount_management("weed_points2")
+#     if int(result.getOutput(0)) >0:
+#         print "success"
+    arcpy.CopyFeatures_management("weed_points2",out_gdb+"/weed_points")
     prioritization_layer= out_gdb+"/weed_points"
     print "using layer: " + prioritization_layer
     
@@ -188,16 +211,15 @@ if re_run == False:
                 risk_assessed = risk_assessed.replace(" ","_")
                 risk_assessed = risk_assessed.replace(".","")
                 
-                if "Candidate" in risk_scores[risk_assessed_raw][0] and risk_scores[risk_assessed_raw][2]: #candidate and has  WHIPPET scores
-                    print "checking " + risk_assessed_raw + ", using WHIPPET scores for: " +risk_scores[risk_assessed_raw][2] + "\n"
-                    arcpy.MakeFeatureLayer_management(prioritization_layer,risk_assessed, "\"scientificname\" = '"+risk_assessed_raw+"'","in_memory")
-                    result = arcpy.GetCount_management(risk_assessed)
-                    if int(result.getOutput(0)) >0:
-                        calculate_scores(risk_assessed,risk_assessed,risk_assessed, comparison_layers[layer]['breaks'])
-                        print "        valid for this dataset\n"
-                    else:
-                        print "        not valid due to lack of points"
-                    arcpy.Delete_management(risk_assessed)
+                print "checking " + risk_assessed_raw
+                arcpy.MakeFeatureLayer_management(prioritization_layer,risk_assessed, "\"scientificname\" = '"+risk_assessed_raw+"'","in_memory")
+                result = arcpy.GetCount_management(risk_assessed)
+                if int(result.getOutput(0)) >0:
+                    calculate_scores(risk_assessed,risk_assessed,risk_assessed, comparison_layers[layer]['breaks'])
+                    print "        valid for this dataset\n"
+                else:
+                    print "        not valid due to lack of points"
+                arcpy.Delete_management(risk_assessed)
             continue
         elif layer == 'population_size':
             continue
@@ -207,19 +229,17 @@ if re_run == False:
             # copy layer into new geodb
             arcpy.CopyFeatures_management(comparison_layers[layer]['location'],out_gdb+"/" + layer)
             
-            #===================================================================
-            # add a "dice" to avoid zombie polygons
-            #===================================================================
-            
             print "calculating scores\n"
             
             #calculate scores
             calculate_scores(prioritization_layer,out_gdb+"/" + layer,layer, comparison_layers[layer]['breaks'])
 else:
-    prioritization_layer="G:/Projects/CRISP/Dataset_Analysis/CRISP_Runs/1423165289/Prioritize_the_WeedWise.gdb/weed_points" #use already calculated scores for faster testing of subsequent codebase
-    out_gdb = "G:/Projects/CRISP/Dataset_Analysis/CRISP_Runs/1423165289/Prioritize_the_WeedWise.gdb"
-    Geodb_folder = "G:/Projects/CRISP/Dataset_Analysis/CRISP_Runs/1423165289"
-    
+    #use already calculated scores for faster testing of subsequent codebase
+    prioritization_layer="G:/Projects/CRISP/Dataset_Analysis/CRISP_Runs/1423696819/Prioritize_the_WeedWise.gdb/weed_points" 
+    out_gdb = "G:/Projects/CRISP/Dataset_Analysis/CRISP_Runs/1423696819/Prioritize_the_WeedWise.gdb"
+    Geodb_folder = "G:/Projects/CRISP/Dataset_Analysis/CRISP_Runs/1423696819"
+
+
 weights = {
         'impact':.378,
             'impact_to_wildlands':.483,
@@ -246,12 +266,17 @@ weights = {
 #===============================================================================
 # calculate population scores for each row
 #===============================================================================
+
+    
 print "calculating final scores"
 
 final_scores ={}
 
 if re_run == False:
     arcpy.AddField_management(prioritization_layer,"WHIPPET_score_overall","FLOAT")
+    arcpy.AddField_management(prioritization_layer,"WHIPPET_invasiveness_score","FLOAT")
+    arcpy.AddField_management(prioritization_layer,"WHIPPET_feasibility_score","FLOAT")
+    arcpy.AddField_management(prioritization_layer,"WHIPPET_impact_score","FLOAT")
 
 fields = []
 fieldList = arcpy.ListFields(prioritization_layer)
@@ -277,60 +302,69 @@ for weed in weeds:
             population_size = score_using_breaks(weed.getValue("obsPatchSize"),comparison_layers['population_size']['breaks'])
             
         
-        score = (   weights['impact'] * ( weights['impact_to_wildlands'] * int(risk_scores[weed_name][4]) + 
+        impact_score =( weights['impact'] * ( weights['impact_to_wildlands'] * int(risk_scores[weed_name][1]) + 
                                           weights['site_value'] *(   weights['oaks'] * weed.getValue("oaks_score") + 
                                                                      weights['t_and_e'] * weed.getValue("t_and_e_score") + 
                                                                      weights['priority_sites'] * weed.getValue("priority_sites_score") + 
-                                                                     weights['partner_projects'] * weed.getValue("partner_projects_score") )) + 
-                    weights['invasiveness'] *  ( weights['conspecifics'] * weed.getValue(conspecific_score) + 
-                                                 weights['rate_of_spread'] * int(risk_scores[weed_name][6]) + 
-                                                 weights['distance'] * ( weights['streets'] * weed.getValue("streets_score") + 
-                                                                         weights['rivers'] * weed.getValue("streams_score") + 
-                                                                         weights['mines'] * 3 ) ) + 
-                    weights['feasibility'] *   (weights['population_size'] * population_size + 
-                                                weights['reproductive_ability'] * int(risk_scores[weed_name][8]) + 
-                                                weights['detectablility'] * int(risk_scores[weed_name][9]) + 
-                                                weights['accessibility'] * 3 + 
-                                                weights['control_effectiveness'] * int(risk_scores[weed_name][11]) + 
-                                                weights['control_cost'] * int(risk_scores[weed_name][13])  ))
+                                                                     weights['partner_projects'] * weed.getValue("partner_projects_score") ))) 
         
-        if not weed_name in final_scores:
+        #is this valid, or is the simpler option better?
+        vector_score= vector_scored(risk_scores,weights,{'streets':weed.getValue("streets_score"),'rivers':weed.getValue("streams_score"),'mines':3.0})
+        
+        invasiveness_score = (weights['invasiveness'] *  ( weights['conspecifics'] * weed.getValue(conspecific_score) + 
+                                                 weights['rate_of_spread'] * int(risk_scores[weed_name][3]) + 
+                                                 weights['distance'] * vector_score ))
+        
+        
+        feasibility_score =  (weights['feasibility'] *   (weights['population_size'] * population_size + 
+                                                weights['reproductive_ability'] * int(risk_scores[weed_name][5]) + 
+                                                weights['detectablility'] * int(risk_scores[weed_name][6]) + 
+                                                weights['accessibility'] * 3 + 
+                                                weights['control_effectiveness'] * int(risk_scores[weed_name][8]) + 
+                                                weights['control_cost'] * int(risk_scores[weed_name][10])  ))
+
+        score = impact_score + invasiveness_score + feasibility_score
+        
+        if not weed_name in final_scores:  #setting up data structure for below report
             final_scores[weed_name]=[]
         final_scores[weed_name].append(score)
         
         weed.setValue("WHIPPET_score_overall",score)
+        weed.setValue("WHIPPET_invasiveness_score",invasiveness_score)
+        weed.setValue("WHIPPET_feasibility_score",feasibility_score)
+        weed.setValue("WHIPPET_impact_score",impact_score)
         weeds.updateRow(weed)
 
-#===============================================================================
-# setup mxd
-#===============================================================================
-print "setting up mxd..."
-
-mxd = "G:/Projects/CRISP/Dataset_Analysis/CRISP2014_template.mxd"
-shutil.copyfile(mxd,Geodb_folder+"/good_to_go.mxd")
-mxd = Geodb_folder+"/good_to_go.mxd"
-
-arcpy.env.workspace = out_gdb
-# Set overwrite option
-arcpy.env.overwriteOutput = True
-my_mxd = arcpy.mapping.MapDocument(mxd)  
-data_frame = arcpy.mapping.ListDataFrames(my_mxd)[0]  
-# Switch to data view  
-my_mxd.activeView = data_frame.name  
-
-for comparison_layer in comparison_layers:
-    if comparison_layer == "conspecifics":
-        comparison_layer = "weed_points"
-    elif comparison_layer == "population_size":
-        continue
-        
-    arcpy.MakeFeatureLayer_management( comparison_layer ,comparison_layer + "_lyr")
-    addLayer=arcpy.mapping.Layer(comparison_layer + "_lyr")
-    addLayer.name=comparison_layer + " layer"
-    
-    arcpy.mapping.AddLayer(data_frame,addLayer)
-my_mxd.save()
-del my_mxd
+# #===============================================================================
+# # setup mxd
+# #===============================================================================
+# print "setting up mxd..."
+# 
+# mxd = "G:/Projects/CRISP/Dataset_Analysis/CRISP2014_template.mxd"
+# shutil.copyfile(mxd,Geodb_folder+"/good_to_go.mxd")
+# mxd = Geodb_folder+"/good_to_go.mxd"
+# 
+# arcpy.env.workspace = out_gdb
+# # Set overwrite option
+# arcpy.env.overwriteOutput = True
+# my_mxd = arcpy.mapping.MapDocument(mxd)  
+# data_frame = arcpy.mapping.ListDataFrames(my_mxd)[0]  
+# # Switch to data view  
+# my_mxd.activeView = data_frame.name  
+# 
+# for comparison_layer in comparison_layers:
+#     if comparison_layer == "conspecifics":
+#         comparison_layer = "weed_points"
+#     elif comparison_layer == "population_size":
+#         continue
+#         
+#     arcpy.MakeFeatureLayer_management( comparison_layer ,comparison_layer + "_lyr")
+#     addLayer=arcpy.mapping.Layer(comparison_layer + "_lyr")
+#     addLayer.name=comparison_layer + " layer"
+#     
+#     arcpy.mapping.AddLayer(data_frame,addLayer)
+# my_mxd.save()
+# del my_mxd
 
 #===============================================================================
 # develop charts
