@@ -15,4 +15,7 @@ Requirements:
 
 You must have ArcGIS installed in order to use this. Developed with ArcGIS 10.2.2 install, but probably works on older versions.
 
+Setup:
 
+-Download this repository using the "Download Zip" link on the right
+-In ArcGIS right-click in ArcToolbox window and select "Add Toolbox". Then navigate to the unzipped folder that you just downloaded.  The toolbox should now appear in your ArcToolbox window.
