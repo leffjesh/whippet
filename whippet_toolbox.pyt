@@ -548,7 +548,7 @@ class Whippet(object):
             feasibility_score =  (weights['feasibility'] *   (weights['population_size'] * population_size + 
                                                     weights['reproductive_ability'] * int(risk_scores[weed_name][5]) + 
                                                     weights['detectablility'] * int(risk_scores[weed_name][6]) + 
-                                                      + 
+                                                    weights['accessibility'] * 3 + 
                                                     weights['control_effectiveness'] * int(risk_scores[weed_name][8]) + 
                                                     weights['control_cost'] * int(risk_scores[weed_name][10])  )) 
     
