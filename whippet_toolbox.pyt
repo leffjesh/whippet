@@ -122,16 +122,16 @@ class Toolbox(object):
     def __init__(self):
         """Define the toolbox (the name of the toolbox is the name of the
         .pyt file)."""
-        self.label = "Whippet_python"
+        self.label = "Whippet_Toolbox"
         self.alias = ""
         # List of tool classes associated with this toolbox
-        self.tools = [Whippet_python]
+        self.tools = [Whippet]
         
         
-class Whippet_python(object):
+class Whippet(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
-        self.label = "Whippet_python"
+        self.label = "Whippet"
         self.description = "Python implementation of WHIPPET"
         self.canRunInBackground = True
 
@@ -607,8 +607,8 @@ if __name__ == '__main__':
     # This is used for debugging. Using this structure makes it much easier to debug using standard Python development tools.
 
     #switch this to a True case if you are running in debug mode, you have to switch back to a False case when loading into arcmap otherwise it will run when arcmap loads the toolbox.
-    if 1==0:
-        tasks = Whippet_python()
+    if 1==1:
+        tasks = Whippet()
         params = tasks.getParameterInfo()
         #make feature layer
         arcpy.MakeFeatureLayer_management("G:/Projects/CRISP/Dataset_Analysis/WeedData_ClackamasBasin.mdb/CRISP_Weed_Observations_OregonSP","weed_point_layer")
