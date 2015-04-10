@@ -1,0 +1,77 @@
+<html>
+  <head>
+    <!--Load the AJAX API-->
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+
+      // Load the Visualization API and the piechart package.
+      google.load('visualization', '1.0', {'packages':['corechart','table','treemap']});
+	
+      // Set a callback to run when the Google Visualization API is loaded.
+      google.setOnLoadCallback(drawChart);
+
+      // Callback that creates and populates a data table,
+      // instantiates the pie chart, passes in the data and
+      // draws it.
+      function drawChart() {
+
+        
+
+		//ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+		
+			var data = google.visualization.arrayToDataTable([
+		  //edit content - box
+		  // [species, low range, first quantile, third quantile, high]
+		  // Treat first row as data as well.
+		], true);
+
+		var options = {
+		  legend:'none',
+		  orientation:'horizontal',
+		  width:1500,
+		  height:800
+		};
+
+		var chart = new google.visualization.CandlestickChart(document.getElementById('chart_div'));
+
+		chart.draw(data, options);
+		
+		//ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+        
+		var data2 = google.visualization.arrayToDataTable([
+			['Overall Priority Score','Frequency'],
+			//edit content - overall priority
+			
+		  ]);
+
+		var options = {
+          title: 'Distribution of priority scores',
+          vAxis: {title: 'Frequency',  titleTextStyle: {color: 'red'}},
+          orientation:'horizontal',
+		  width:800
+        };
+
+        var chart = new google.visualization.BarChart(document.getElementById('chart_div2'));
+
+        chart.draw(data2, options);
+		
+		//ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+		
+		
+	  
+        
+      }
+        
+    </script>
+  </head>
+
+  <body>
+    <!--Div that will hold the pie chart-->
+<h1>Clackamas River Basin Weed Observation Prioritization Dataset Analysis</h1>
+	<h3>Data compiled using iMapInvasives Oregon dataset and prioritized using a modified WHIPPET algorithm.  Make this better by sharing your data if you haven't already.  Check out the Oregon iMapInvasives <a href="https://sites.google.com/site/orimapresources/">resources page</a> for more information.   Analysis and charts developed by Jeff Lesh, <a href="mailto://jlesh@conservationdistrict.org">jlesh@conservationdistrict.org</a>.  Feel free to send me questions if you have any.
+	<hr>
+    <div id="chart_div"></div>
+    <div id="chart_div2"></div>
+	
+  </body>
+</html>
