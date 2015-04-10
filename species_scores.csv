@@ -1,42 +1,46 @@
 scientificname,Eradication Priority,Impact to Wildlands,Impact to Wildlands score (3),Rate of Spread,Rate of spread score (5),Reproductive Ability,Reproductive Ability Score (7),Detectability (8),Control Effectiveness (no herbicides) ,Control Effectiveness (can use herbicides) (10),Control Cost (no herbicides),Control Cost (can use herbicides) (12),Vector - roads,Vector - rivers,Vector - mines,Alternative Name
-Alliaria petiolata,TRUE,B,6,A,10,A,1,6,6,10,3,6,yes,yes,yes,Alliaria petiolata
 Anthoxanthum odoratum,FALSE,B,6,B,6,B,3,1,3,6,1,10,yes,no,yes,Anthoxanthum odoratum
-Brachypodium sylvaticum,TRUE,B,6,A,10,B,3,3,3,6,0,6,yes,yes,yes,Brachypodium sylvaticum
-Centaurea diffusa,TRUE,B,6,B,6,B,3,6,3,10,0,6,yes,yes,yes,Centaurea diffusa
-Centaurea stoebe ssp. micranthos,TRUE,B,6,B,6,A,1,6,3,6,0,6,yes,no,yes,Centaurea maculosa
-Centaurea xmoncktonii,TRUE,B,6,B,6,A,1,6,3,10,0,6,yes,no,yes,Centaurea x pratensis
 Chondrilla juncea,FALSE,B,6,B,6,A,1,6,1,3,0,3,yes,no,yes,Chondrilla juncea
 Cirsium arvense,FALSE,B,6,B,6,A,1,6,0,1,0,6,yes,yes,yes,Cirsium arvense
 Cirsium vulgare,FALSE,B,6,B,6,A,1,10,3,6,1,10,yes,no,yes,Cirsium vulgare
 Conium maculatum,FALSE,B,6,B,6,A,1,10,1,6,0,6,yes,yes,yes,Conium maculatum
 Crataegus monogyna,FALSE,C,3,B,6,C,6,6,6,,0,6,yes,no,yes,Crataegus monogyna
 Cytisus scoparius,FALSE,A,10,B,6,A,1,10,0,3,1,6,yes,no,yes,Cytisus scoparius
-Daphne laureola,TRUE,B,6,B,6,C,6,6,6,6,1,3,no,no,no,Daphne laureola
 Digitalis purpurea,FALSE,C,3,B,6,A,1,3,1,3,1,6,yes,yes,yes,Digitalis purpurea
 Dipsacus fullonum,FALSE,B,6,B,6,B,3,6,0,6,1,6,yes,yes,yes,Dipsacus fullonum
 Egeria densa,FALSE,A,10,A,10,B,3,10,1,6,0,1,yes,yes,yes,Egeria densa
-Fallopia japonica,TRUE,B,6,B,6,B,3,10,0,3,0,3,yes,yes,yes,Polygonum cuspidatum
-Fallopia sachalinensis,TRUE,B,6,B,6,B,3,10,0,3,0,3,yes,yes,yes,Polygonum sachalinense
-Fallopia xbohemica,TRUE,B,6,B,6,B,3,10,0,3,0,3,yes,yes,yes,Polygonum cuspidatum
-Heracleum mantegazzianum,TRUE,B,6,A,10,A,1,10,10,10,3,6,yes,yes,yes,Heracleum mantegazzianum
-Hieracium aurantiacum,TRUE,B,6,A,10,A,1,3,1,6,1,3,yes,no,yes,Hieracium aurantiacum
 Holcus lanatus,FALSE,B,6,B,6,A,1,1,6,6,0,3,yes,no,yes,Holcus lanatus
 Hypericum perforatum,FALSE,B,6,B,6,A,1,6,6,6,6,6,yes,no,yes,Hypericum perforatum
 Ilex aquifolium,FALSE,B,6,B,6,C,6,6,6,10,0,6,yes,no,yes,Ilex aquifolium
-Impatiens glandulifera,TRUE,B,6,A,10,B,3,6,10,10,6,6,yes,yes,no,Impatiens glandulifera
 Iris pseudacorus,FALSE,C,3,B,6,A,1,10,3,3,0,6,yes,no,yes,Iris pseudacorus
 Linaria vulgaris,FALSE,B,6,B,6,A,1,6,1,3,0,6,yes,no,yes,Linaria vulgaris
-Lythrum salicaria,TRUE,A,10,A,10,A,1,10,3,3,0,3,yes,no,yes,Lythrum salicaria
-Potentilla recta,TRUE,B,6,B,6,A,1,6,3,6,1,3,yes,no,yes,Potentilla recta
 Prunus cerasifera,FALSE,C,3,B,6,C,6,10,6,10,0,6,yes,no,yes,Prunus cerasifera
 Ranunculus repens,FALSE,C,3,C,3,A,1,3,10,10,0,10,yes,no,yes,Ranunculus repens
 Robinia pseudoacacia,FALSE,C,3,B,6,B,3,10,1,6,0,3,yes,no,yes,Robinia pseudoacacia
 Rubus armeniacus,FALSE,A,10,A,10,A,1,6,1,6,0,3,yes,yes,yes,Rubus armeniacus
 Rubus bifrons,FALSE,A,10,A,10,A,1,6,1,6,0,3,yes,yes,yes,Rubus armeniacus
-Saponaria officinalis,TRUE,C,3,B,6,A,1,3,1,6,0,6,yes,yes,yes,Saponaria officinalis
 Senecio jacobaea,FALSE,C,3,B,6,A,1,3,1,6,3,10,yes,no,yes,Senecio jacobaea
 Tanacetum vulgare,FALSE,B,6,B,6,A,1,3,6,6,0,6,yes,yes,yes,Tanacetum vulgare
 Torilis arvensis,FALSE,C,3,B,6,C,6,3,6,6,3,6,yes,no,yes,Torilis arvensis
-Ulex europaeus,TRUE,A,10,B,6,A,1,6,1,3,0,3,yes,yes,yes,Ulex europaeus
 Verbascum thapsus,FALSE,C,3,B,6,A,1,10,6,10,6,10,yes,no,yes,Verbascum thapsus
 Vinca major,FALSE,B,6,B,6,B,3,6,3,6,0,3,yes,yes,yes,Vinca major
+Alliaria petiolata,TRUE,A,10,A,10,A,1,3,6,10,3,6,yes,yes,yes,Alliaria petiolata
+Brachypodium sylvaticum,TRUE,B,6,A,10,A,1,1,3,6,0,3,yes,yes,yes,Brachypodium sylvaticum
+Centaurea diffusa,TRUE,B,6,B,6,B,3,6,3,6,0,3,yes,yes,yes,Centaurea diffusa
+Centaurea nigrescens,TRUE,B,6,B,6,A,1,6,,6,0,3,yes,no,yes,Centaurea x pratensis
+Centaurea stoebe ssp. micranthos,TRUE,B,6,B,6,A,1,6,3,6,0,3,yes,no,yes,Centaurea maculosa
+Centaurea xmoncktonii,TRUE,B,6,B,6,A,1,6,3,6,0,3,yes,no,yes,Centaurea x pratensis
+Daphne laureola,TRUE,B,6,B,6,C,6,6,6,6,1,3,no,no,no,Daphne laureola
+Fallopia japonica,TRUE,B,6,B,6,B,3,10,0,3,0,3,yes,yes,yes,Polygonum cuspidatum
+Fallopia sachalinensis,TRUE,B,6,B,6,B,3,10,0,3,0,3,yes,yes,yes,Polygonum sachalinense
+Fallopia xbohemica,TRUE,B,6,B,6,B,3,10,0,3,0,3,yes,yes,yes,Polygonum cuspidatum
+Heracleum mantegazzianum,TRUE,B,6,A,10,A,1,6,6,6,3,6,yes,yes,yes,Heracleum mantegazzianum
+Hieracium aurantiacum,TRUE,B,6,A,10,A,1,3,1,6,1,3,yes,no,yes,Hieracium aurantiacum
+Hieracium caespitosum,TRUE,B,6,A,10,A,1,1,,3,1,1,yes,no,yes,Hieracium caespitosum
+Impatiens glandulifera,TRUE,B,6,A,10,B,3,6,6,6,3,3,yes,yes,no,Impatiens glandulifera
+Lythrum salicaria,TRUE,A,10,A,10,A,1,10,3,3,0,3,yes,no,yes,Lythrum salicaria
+Petasites japonicus,TRUE,B,6,B,6,B,3,10,,3,,3,no,yes,no,Petasites japonicus
+Potentilla recta,TRUE,B,6,A,10,A,1,6,3,3,1,3,yes,no,yes,Potentilla recta
+Saponaria officinalis,TRUE,C,3,B,6,A,1,3,1,6,0,6,yes,yes,yes,Saponaria officinalis
+Ulex europaeus,TRUE,A,10,B,6,A,1,6,1,3,0,3,yes,yes,yes,Ulex europaeus
+Xanthium spinosum,TRUE,C,3,B,6,B,3,6,,6,3,3,yes,no,no,Xanthium spinosum
