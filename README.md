@@ -19,3 +19,8 @@ Setup:
 
 -Download this repository using the "Download Zip" link on the right
 -In ArcGIS right-click in ArcToolbox window and select "Add Toolbox". Then navigate to the unzipped folder that you just downloaded.  The toolbox should now appear in your ArcToolbox window.
+-You will first need to setup your species scores using the WHIPPET Species Assessment Form and placing the values into the species_scores.csv file that is included in this repository.
+-You can then load the various layers needed for whippet evaluation (mines, roads, streams/rivers, weed populations, site values) and run the tool.
+
+
+Documentation remains to be gathered and/or completed before this tool is useful. 
