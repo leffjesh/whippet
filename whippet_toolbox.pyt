@@ -157,36 +157,43 @@ class Whippet(object):
             datatype="Field",
             parameterType="Required",
             direction="Input")
-        
+
         param3 = arcpy.Parameter(
+            displayName="Accessibility Score Attribute",
+            name="accessibility_score_attribute",
+            datatype="Field",
+            parameterType="Required",
+            direction="Input")
+        
+        param4 = arcpy.Parameter(
            displayName="Gross Patch Size Unit",
            name="patch_size_unit",
            datatype="GPString",
            parameterType="Required",
            direction="Input")
 
-        param4 = arcpy.Parameter(
+        param5 = arcpy.Parameter(
             displayName="Conspecific Breaks",
             name="conspecific_breaks",
             datatype="GPString",
             parameterType="Required",
             direction="Input")
         
-        param5 = arcpy.Parameter(
+        param6 = arcpy.Parameter(
             displayName="Population Breaks",
             name="population_breaks",
             datatype="GPString",
             parameterType="Required",
             direction="Input")
         
-        param6 = arcpy.Parameter(
+        param7 = arcpy.Parameter(
             displayName="site value",
             name="site_value",
             datatype="GPFeatureLayer",
             parameterType="Required",
             direction="Input")
 
-        param7 = arcpy.Parameter(
+        param8 = arcpy.Parameter(
             displayName="site value Attribute",
             name="site value_attribute",
             datatype="Field",
@@ -194,28 +201,28 @@ class Whippet(object):
             direction="Input")
 
         
-        param8 = arcpy.Parameter(
+        param9 = arcpy.Parameter(
             displayName="streams",
             name="streams_layer",
             datatype="GPFeatureLayer",
             parameterType="Required",
             direction="Input")
         
-        param9 = arcpy.Parameter(
+        param10 = arcpy.Parameter(
             displayName="streets",
             name="streets_layer",
             datatype="GPFeatureLayer",
             parameterType="Required",
             direction="Input")
         
-        param10 = arcpy.Parameter(
+        param11 = arcpy.Parameter(
             displayName="mines",
             name="mines_layer",
             datatype="GPFeatureLayer",
             parameterType="Required",
             direction="Input")
 
-        param11 = arcpy.Parameter(
+        param12 = arcpy.Parameter(
             displayName="Vector Breaks",
             name="vector_breaks",
             datatype="GPString",
@@ -232,47 +239,46 @@ class Whippet(object):
         param2.filter.list = ['Long','Short','Float','Double']
         param2.parameterDependencies = [param0.name]
 
-        param7.filter.list = ['Long','Short','Float','Double']
-        param7.parameterDependencies = [param6.name]
+        param8.filter.list = ['Long','Short','Float','Double']
+        param8.parameterDependencies = [param7.name]
+
+        param3.filter.list = ['Long','Short','Float','Double']
+        param3.parameterDependencies = [param0.name]
         
-        param6.filter.list = ["Polygon"]
-        param8.filter.list = ["Polyline"]
+        param7.filter.list = ["Polygon"]
         param9.filter.list = ["Polyline"]
-        param10.filter.list = ["Point"]
+        param10.filter.list = ["Polyline"]
+        param11.filter.list = ["Point"]
         
-        param11.defaultEnvironmentName="distance option 1 (miles)"
-        param11.filter.list=['distance option 1 (miles)',
+        param12.defaultEnvironmentName="distance option 1 (miles)"
+        param12.filter.list=['distance option 1 (miles)',
                             'distance option 2 (miles)',
                             'distance option 3 (miles)',
                             'distance option 4 (miles)'
                             ]  
         
-        param4.defaultEnvironmentName='conspecifics option 1 (miles)'
-        param4.filter.list=['conspecifics option 1 (miles)',
+        param5.defaultEnvironmentName='conspecifics option 1 (miles)'
+        param5.filter.list=['conspecifics option 1 (miles)',
                             'conspecifics option 2 (miles)',
                             'conspecifics option 3 (miles)',
                             'conspecifics option 4 (miles)']    
          
-        param5.defaultEnvironmentName='area option 1 (acres)'
-        param5.filter.list=['area option 1 (acres)',
+        param6.defaultEnvironmentName='area option 1 (acres)'
+        param6.filter.list=['area option 1 (acres)',
                             'area option 2 (acres)',
                             'area option 3 (acres)'] 
                                                               
-        param3.defaultEnvironmentName='square feet'
-        param3.filter.list=["square feet","acre","square meter","hectare"]
+        param4.defaultEnvironmentName='square feet'
+        param4.filter.list=["square feet","acre","square meter","hectare"]
         
-        param12 = arcpy.Parameter(
+        param13 = arcpy.Parameter(
             displayName="WHIPPET Results",
             name="whippet_results",
             datatype="GPFeatureLayer",
             parameterType="Derived",
             direction="Output")
 
-        timestring=str(int(time.time())).replace(" ", "_").replace("-", "_")
-        Geodb_folder = os.path.dirname(__file__)  + "/results/" + timestring
-        
-        
-        params = [param0, param1, param2,param3,param4,param5, param6,param7, param8, param9, param10,param11,param12]
+        params = [param0, param1, param2,param3,param4,param5, param6,param7, param8, param9, param10,param11,param12,param13]
     
         return params
 
@@ -297,19 +303,21 @@ class Whippet(object):
         prioritization_layer = parameters[0].value
         scientific_fieldname = str(parameters[1].value)
         patch_size_fieldname = str(parameters[2].value)
-        patch_size_unit = str(parameters[3].value)
+        accessibility_fieldname = str(parameters[3].value)
+        patch_size_unit = str(parameters[4].value)
         #percent_cover_fieldname = "obsPercentCover" #removed due to it not being in the original model
-        conspecific_breaks = str(parameters[4].value)
-        population_breaks = str(parameters[5].value)
-        site_value = parameters[6].value
-        site_value_fieldname = str(parameters[7].value)
-        streams = parameters[8].value
-        streets = parameters[9].value
-        mines = parameters[10].value
-        vector_breaks = str(parameters[11].value)
+        conspecific_breaks = str(parameters[5].value)
+        population_breaks = str(parameters[6].value)
+        site_value = parameters[7].value
+        site_value_fieldname = str(parameters[8].value)
+        streams = parameters[9].value
+        streets = parameters[10].value
+        mines = parameters[11].value
+        vector_breaks = str(parameters[12].value)
         
         #defaults, you may want to change these depending on your dataset, we calculated the median for our populations with pop size data and used that resulting score
         default_population_score = 3
+        default_accessibility_score = 3
         
         re_run = False
         
@@ -521,7 +529,7 @@ class Whippet(object):
             
             weed_name = weed.getValue(scientific_fieldname)
             if weed.isNull(patch_size_fieldname) or weed.getValue(patch_size_fieldname) == 0 or 1==0:
-                population_size = default_population_score
+                population_score = default_population_score
             else:
                 conversion_num = get_conversion_num(patch_size_unit, population_breaks)
                 patch_size = weed.getValue(patch_size_fieldname)
@@ -532,8 +540,12 @@ class Whippet(object):
 #                 if not weed.isNull(percent_cover_fieldname):
 #                     patch_size = patch_size * (weed.getValue(percent_cover_fieldname)/100)
                 
-                population_size = score_using_breaks(patch_size,break_options[population_breaks],conversion_num)
-                
+                population_score = score_using_breaks(patch_size,break_options[population_breaks],conversion_num)
+            
+            if weed.isNull(accessibility_fieldname):
+                accessibility_score = default_accessibility_score
+            else:
+                accessibility_score = weed.getValue(accessibility_fieldname)
             
             impact_score =( weights['impact'] * ( weights['impact_to_wildlands'] * int(risk_scores[weed_name][1]) + 
                                               weights['site_value'] *  float(weed.getValue(site_value_fieldname))  ))
@@ -545,10 +557,10 @@ class Whippet(object):
                                                      weights['distance'] * vector_score ))
             
             
-            feasibility_score =  (weights['feasibility'] *   (weights['population_size'] * population_size + 
+            feasibility_score =  (weights['feasibility'] *   (weights['population_size'] * population_score + 
                                                     weights['reproductive_ability'] * int(risk_scores[weed_name][5]) + 
                                                     weights['detectablility'] * int(risk_scores[weed_name][6]) + 
-                                                    weights['accessibility'] * 3 + 
+                                                    weights['accessibility'] * accessibility_score + 
                                                     weights['control_effectiveness'] * int(risk_scores[weed_name][8]) + 
                                                     weights['control_cost'] * int(risk_scores[weed_name][10])  )) 
     
@@ -565,7 +577,7 @@ class Whippet(object):
             weeds.updateRow(weed)
         
         
-        parameters[12].value = prioritization_layer
+        parameters[13].value = prioritization_layer
          
         #===============================================================================
         # develop charts
@@ -611,31 +623,33 @@ if __name__ == '__main__':
         tasks = Whippet()
         params = tasks.getParameterInfo()
         #make feature layer
-        arcpy.MakeFeatureLayer_management("G:/Projects/CRISP/Dataset_Analysis/WeedData_ClackamasBasin.mdb/CRISP_Weed_Observations_OregonSP","weed_point_layer")
+#         arcpy.MakeFeatureLayer_management("G:/Projects/CRISP/Dataset_Analysis/WeedData_ClackamasBasin.mdb/CRISP_Weed_Observations_OregonSP","weed_point_layer")
+        arcpy.MakeFeatureLayer_management("C:/temp/whippet_generic/1428622400/Prioritize_the_WeedWise.gdb/all_weed_points","weed_point_layer")
         params[0].value = "weed_point_layer" #layer to process
         params[1].value = 'scientificname'  
         params[2].value = 'obsPatchSize' 
-        params[3].value = "square feet"
+        params[3].value = "accessibility_score"
+        params[4].value = "square feet"
 
-        params[4].value = 'conspecifics option 2 (miles)'
-        params[5].value = 'area option 2 (acres)'
+        params[5].value = 'conspecifics option 2 (miles)'
+        params[6].value = 'area option 2 (acres)'
 
         #make feature layer
         arcpy.MakeFeatureLayer_management("G:/Projects/CRISP/Whippet Support/New File Geodatabase.gdb/dummy_site_value","dummy_site_value")
-        params[6].value = "dummy_site_value"
-        params[7].value = "WHIPPET_VALUE"
+        params[7].value = "dummy_site_value"
+        params[8].value = "WHIPPET_VALUE"
         
         #make feature layer
         arcpy.MakeFeatureLayer_management("G:/Projects/CRISP/Dataset_Analysis/WeedData_ClackamasBasin.mdb/cc_mc_streams","streams")
-        params[8].value = "streams"
+        params[9].value = "streams"
         #make feature layer
         arcpy.MakeFeatureLayer_management("G:/Projects/CRISP/Dataset_Analysis/WeedData_ClackamasBasin.mdb/cc_basin_streets","streets")
-        params[9].value = "streets"
+        params[10].value = "streets"
         #make feature layer
         arcpy.MakeFeatureLayer_management("G:/Projects/CRISP/Dataset_Analysis/WeedData_ClackamasBasin.mdb/cc_basin_mines","mines")
-        params[10].value = "mines"
+        params[11].value = "mines"
         
-        params[11].value = 'distance option 2 (miles)'
+        params[12].value = 'distance option 2 (miles)'
         
         tasks.execute(params, None)
         
