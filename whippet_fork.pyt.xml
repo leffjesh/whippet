@@ -6,11 +6,11 @@
 		<ArcGISFormat>1.0</ArcGISFormat>
 		<ArcGISstyle>XTools Pro Metadata</ArcGISstyle>
 		<SyncOnce>TRUE</SyncOnce>
-		<ModDate>20150213</ModDate>
-		<ModTime>083653</ModTime>
+		<ModDate>20150410</ModDate>
+		<ModTime>104309</ModTime>
 	</Esri>
 	<toolbox name="whippet_fork" alias="">
-		<arcToolboxHelpPath>c:\program files (x86)\arcgis\desktop10.1\Help\gp</arcToolboxHelpPath>
+		<arcToolboxHelpPath>c:\program files (x86)\arcgis\desktop10.2\Help\gp</arcToolboxHelpPath>
 		<toolsets/>
 	</toolbox>
 	<dataIdInfo>
