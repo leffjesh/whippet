@@ -8,7 +8,8 @@ background information is available at:
 -http://proceedings.esri.com/library/userconf/proc14/papers/223_620.pdf
 
 tool devleoped by Gina Darin
-implemented in python for use in ESRI workflows by @leffjesh
+
+implemented in python for use in ESRI workflows by Jeff Lesh
 
 
 Requirements:
