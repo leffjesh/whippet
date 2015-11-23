@@ -2,10 +2,9 @@
 implementation of the WHIPPET invasive plant eradication prioritization tool
 
 WHIPPET devleoped by Gina Darin and background information is available at:
-
--[http://www.ncbi.nlm.nih.gov/pubmed/20832930]
--[http://whippet.cal-ipc.org/pages/view/guide]
--[http://proceedings.esri.com/library/userconf/proc14/papers/223_620.pdf]
+-http://www.ncbi.nlm.nih.gov/pubmed/20832930
+-http://whippet.cal-ipc.org/pages/view/guide
+-http://proceedings.esri.com/library/userconf/proc14/papers/223_620.pdf
 
 Implemented as a ESRI Python Toolbox for use in ESRI workflows by Jeff Lesh
 
