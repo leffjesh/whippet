@@ -15,8 +15,15 @@
    Coding by Jeff Lesh jeff@jefflesh.com, http://github.com/leffjesh
    Hosted on github, contributions welcome
    
+   potential enhancement to consider: rather than use nearest conspecific, use a more sophisticated way to determine priority based on how close a population is to another conspecific one
+       ideas
+           -calc distance to all conspecific pops, 
+           -assign populations to clusters and calc distance to nearest cluster or to all clusters
+           -assign to clusters, then create a graph (think graph theory) of clusters with relevant vectors as pathways, then calculate distance to nearest neighbor along pathway
+   
 '''
 import arcpy
+from arcpy.sa import *
 import time
 import datetime
 import csv
@@ -24,6 +31,7 @@ import os
 import inspect
 import shutil
 import numpy as np
+
 
 def edit_report(report_name, output_dir, replacements, new_report_name=None):
     report_templates = os.path.dirname(__file__) 
@@ -69,7 +77,7 @@ def get_conversion_num (unit, breaks_option):
     elif (unit == "feet" and "feet" in breaks_option) or (unit == "meter" and "meter" in breaks_option) or (unit == "mile" and "mile" in breaks_option):
         return 1
     else:
-        print "error, bad patch size unit"
+        print "error, bad patch size unit.  this may be due to the linear unit of your weed layer's projection, tested with international feet"
         return False
     
 def vector_scored (risk_scores,weights,values):
@@ -189,7 +197,7 @@ class Whippet(object):
         param7 = arcpy.Parameter(
             displayName="site value",
             name="site_value",
-            datatype="GPFeatureLayer",
+            datatype=["DERasterDataset","GPRasterLayer","DERasterCatalog","GPFeatureLayer"],
             parameterType="Required",
             direction="Input")
 
@@ -245,7 +253,10 @@ class Whippet(object):
         param3.filter.list = ['Long','Short','Float','Double']
         param3.parameterDependencies = [param0.name]
         
-        param7.filter.list = ["Polygon"]
+       
+        #added raster support, so removed this
+        #param7.filter.list = ["Polygon"]
+        
         param9.filter.list = ["Polyline"]
         param10.filter.list = ["Polyline"]
         param11.filter.list = ["Point"]
@@ -305,7 +316,7 @@ class Whippet(object):
         patch_size_fieldname = str(parameters[2].value)
         accessibility_fieldname = str(parameters[3].value)
         patch_size_unit = str(parameters[4].value)
-        #percent_cover_fieldname = "obsPercentCover" #removed due to it not being in the original model
+        percent_cover_fieldname = "obsPercentCover" #removed due to it not being in the original model
         conspecific_breaks = str(parameters[5].value)
         population_breaks = str(parameters[6].value)
         site_value = parameters[7].value
@@ -316,10 +327,16 @@ class Whippet(object):
         vector_breaks = str(parameters[12].value)
         
         #defaults, you may want to change these depending on your dataset, we calculated the median for our populations with pop size data and used that resulting score
-        default_population_score = 3
+        default_population_score = 10
         default_accessibility_score = 3
         
+        #used when you are using a separate method for site_value calculation, set to False as default
+        Multi_Factor_Site_Value = False
+        
+        #used for faster runs without performing certain tasks
         re_run = False
+        
+        site_value_layer_described = arcpy.Describe(comparison_layers[layer]['location'])
         
         break_options = {'distance option 1 (miles)':[[10,.1],
                                    [6,1],
@@ -388,7 +405,12 @@ class Whippet(object):
                                         'breaks':None},
                              'conspecifics':{'breaks':conspecific_breaks}
                              }
-        
+        #see above note when setting Multi_Factor_Site_Value variable
+        if Multi_Factor_Site_Value:
+            del(comparison_layers['site_value'])
+            comparison_layers['partner_projects']={'location':"G:/Projects/CRISP/Dataset_Analysis/WeedData_ClackamasBasin.mdb/priority_sites_Dissolve_Dice4",'breaks':vector_breaks}
+            comparison_layers['t_and_e']={'location':"G:/Projects/CRISP/Dataset_Analysis/WeedData_ClackamasBasin.mdb/T_E_2014_CCBasin_Dice",'breaks':vector_breaks}
+            comparison_layers['site_value2']={'breaks':None, 'raster':True}
         #===============================================================================
         # get information on WHIPPET values
         #===============================================================================
@@ -446,8 +468,9 @@ class Whippet(object):
             for layer in comparison_layers:
                 print layer + "\n"
                 if layer == 'conspecifics':
+                    
+                    #this logic reduces the density of points
                     arcpy.DeleteIdentical_management(prioritization_layer, ["Shape", scientific_fieldname], "33 Feet")
-                    #arcpy.DeleteIdentical_management(prioritization_layer, ["Shape", scientific_fieldname], "328 Feet")
                     
                     #loop through species with WHIPPET scores, test if they are in dataset, setup layers for those that are
                     for risk_assessed in risk_scores:
@@ -465,10 +488,22 @@ class Whippet(object):
                             print "        not valid due to lack of points"
                         arcpy.Delete_management(risk_assessed)
                     continue
+                elif layer == 'site_value2' and Multi_Factor_Site_Value:
+                    continue
                 else:
                     if layer == "site_value":
-                        #do an interseect to get attributes
-                        arcpy.Intersect_analysis([comparison_layers[layer]['location'],prioritization_layer],prioritization_layer + "_withSiteValue")
+                        #TODO add test for RASTER vs. polygon and treat accordingly
+                        if site_value_layer_described.dataType == "FeatureLayer":
+                            #do an interseect to get attributes
+                            arcpy.Intersect_analysis([comparison_layers[layer]['location'],prioritization_layer],prioritization_layer + "_withSiteValue")
+                            
+                        else: #raster dataset
+                            # Check out the ArcGIS Spatial Analyst extension license
+                            arcpy.CheckOutExtension("Spatial")
+                            # Execute ExtractValuesToPoints
+                            ExtractValuesToPoints(prioritization_layer, comparison_layers[layer]['location'], prioritization_layer + "_withSiteValue", "NONE", "ALL")
+                            
+                            
                         arcpy.Delete_management(prioritization_layer)
                         prioritization_layer = prioritization_layer + "_withSiteValue"
                     else:    
@@ -507,6 +542,13 @@ class Whippet(object):
                     'control_effectiveness':.190,
                     'control_cost':.105       
                  }   
+        
+        if Multi_Factor_Site_Value:
+            #weight are used as percentages of score for site value
+            weights['t_and_e']=.1
+            weights['partner_projects']=.45
+            weights['site_value2']=.45
+
         #===============================================================================
         # calculate population scores for each row
         #===============================================================================
@@ -524,7 +566,8 @@ class Whippet(object):
         for weed in weeds:
             if weed.isNull('conspecific_score'):
                 continue
-            if weed.isNull(site_value_fieldname):
+            if not Multi_Factor_Site_Value and weed.isNull(site_value_fieldname) and weed.getValue(site_value_fieldname) != -9999:
+                #no valid site value score (-9999 is the null value for a the Extract Values to Points (used for Raster datasets)
                 continue
             
             weed_name = weed.getValue(scientific_fieldname)
@@ -537,8 +580,8 @@ class Whippet(object):
                 #===============================================================
                 # #removed due this not being in the original algorithm
                 #===============================================================
-#                 if not weed.isNull(percent_cover_fieldname):
-#                     patch_size = patch_size * (weed.getValue(percent_cover_fieldname)/100)
+                if not weed.isNull(percent_cover_fieldname):
+                    patch_size = patch_size * (weed.getValue(percent_cover_fieldname)/100)
                 
                 population_score = score_using_breaks(patch_size,break_options[population_breaks],conversion_num)
             
@@ -547,8 +590,18 @@ class Whippet(object):
             else:
                 accessibility_score = weed.getValue(accessibility_fieldname)
             
+            #calculate site_value
+            site_value_score = float(weed.getValue(site_value_fieldname))
+            if not site_value_layer_described.dataType == "FeatureLayer":
+                #currently, raster site value data is expected to be normalized to 1000
+                site_value_score = site_value_score/1000
+            if Multi_Factor_Site_Value:
+                site_value_score = (weights['t_and_e'] * weed.getValue("t_and_e_score") + 
+                                                     weights['site_value2'] * site_value_score +  
+                                                     weights['partner_projects'] * weed.getValue("partner_projects_score"))
+            
             impact_score =( weights['impact'] * ( weights['impact_to_wildlands'] * int(risk_scores[weed_name][1]) + 
-                                              weights['site_value'] *  float(weed.getValue(site_value_fieldname))  ))
+                                              weights['site_value'] *  site_value_score  ))
             
             vector_score = vector_scored(risk_scores[weed_name],weights,{'streets':weed.getValue("streets_score"),'rivers':weed.getValue("streams_score"),'mines':weed.getValue("mines_score")})
             
@@ -577,6 +630,7 @@ class Whippet(object):
             weeds.updateRow(weed)
         
         
+        #defining derived output layer
         parameters[13].value = prioritization_layer
          
         #===============================================================================
@@ -623,14 +677,13 @@ if __name__ == '__main__':
         tasks = Whippet()
         params = tasks.getParameterInfo()
         #make feature layer
-#         arcpy.MakeFeatureLayer_management("G:/Projects/CRISP/Dataset_Analysis/WeedData_ClackamasBasin.mdb/CRISP_Weed_Observations_OregonSP","weed_point_layer")
-        arcpy.MakeFeatureLayer_management("C:/temp/whippet_generic/1428622400/Prioritize_the_WeedWise.gdb/all_weed_points","weed_point_layer")
+#        arcpy.MakeFeatureLayer_management("G:/Projects/CRISP/Dataset_Analysis/WeedData_ClackamasBasin.mdb/CRISP_Weed_Observations_OregonSP","weed_point_layer")
+        arcpy.MakeFeatureLayer_management("G:/Projects/CRISP_Fall2015Update/Data/WHIPPET_Data/CRISP_Fall2015_Update.gdb/New_Data_Test1_SP_SiteValue2","weed_point_layer")
         params[0].value = "weed_point_layer" #layer to process
         params[1].value = 'scientificname'  
-        params[2].value = 'obsPatchSize' 
-        params[3].value = "accessibility_score"
+        params[2].value = 'obsPatchSize'  
+        params[3].value = "digitalPhoto5"#just using an attribute with all null values for testing "accessibility_score"
         params[4].value = "square feet"
-
         params[5].value = 'conspecifics option 2 (miles)'
         params[6].value = 'area option 2 (acres)'
 
