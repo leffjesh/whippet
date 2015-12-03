@@ -8,7 +8,7 @@ You must read these resources to understand this tool. Implemented as a ESRI Pyt
 
 ##Requirements
 
-You must have ArcGIS installed in order to use this. Developed with ArcGIS 10.2.2 install, but probably works on older versions.
+You must have ArcGIS installed in order to use this. Developed with ArcGIS 10.2.2 install, but probably works on older versions. If you are using a raster for you site value layer, then you must have the Spatial Analyst toolbox available for checkout.
 
 ##Setup/Installation
 
@@ -17,7 +17,19 @@ You must have ArcGIS installed in order to use this. Developed with ArcGIS 10.2.
 
 ##Usage
 
-You will first need to setup your species scores using the WHIPPET Species Assessment Form and placing the values into the species_scores.csv file that is included in this repository. 
+### Species Scoring
+
+You will first need to setup your species scores using the WHIPPET Species Assessment Form (WHIPPET Species Assessment Form.pdf) and placing the values into the species_scores.csv file that is included in this repository. Values currently provided in species_scores.csv are either from CAL-IPC (most) or Clackamas SWCD (some). 
+
+To calculate scores, use the Cal-IPC Criteria (available online: http://www.cal-ipc.org/ip/inventory/pdf/Criteria.pdf) to score the WHIPPET criteria for:
+-	Impact to Wildlands
+  - Rate of Spread
+  - Reproductive Ability
+
+Assign a score using explanations in the scoring document for the remaining species-level criteria:
+- Detectability (although you’re welcome to score this at the population level, if you can get the data), 
+- Control Effectiveness
+- Control Cost.
 
 ###Distance and Area Scoring
 
@@ -103,7 +115,7 @@ Used to score the distance of a patch to a vector.
 
 ###Other usage details
 
-- Patch size should be *gross patch size* supported units are sq. feet (tested in this), meters, acres.
+- Patch size should be *gross patch size* supported units are sq. feet.
 - All attribute scores should be normalized to 10, with one exception.  When using a raster layer normalize to 1000 (it will be automatically adjusted appropriately).
 - If you don't have Accessibility data and/or Patch Size attributes for your invasive species dataset, you may still run this tool with the following modifications.  Create attributes of field type Long, Short, Double, or Float for these criteria and leave the value for each observation set to "Null".  Open the whippet_toolbox.pyt script in a text editor and modify the following values: 
 ```
