@@ -126,3 +126,7 @@ default_accessibility_score = 3
 ##Caveats
 
 - This was tested using only sq. feet patch size data.
+
+##Results
+
+This tool creates a folder "results" inside your WHIPPPET toolbox folder.  Inside this folder are timestamped folders with all the runs you have made with this tool.  Inside the run folder is a file geodatabase with the resulting "target_weed_points_thinned_withSiteValue" feature class.  This layer will automatically be loaded into your current arcmap document.  The layer contains scoring details for this run.
