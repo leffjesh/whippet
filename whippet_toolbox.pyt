@@ -678,7 +678,7 @@ if __name__ == '__main__':
     # This is used for debugging. Using this structure makes it much easier to debug using standard Python development tools.
 
     #switch this to a True case if you are running in debug mode, you have to switch back to a False case when loading into arcmap otherwise it will run when arcmap loads the toolbox.
-    if 1==1:
+    if 1==0:
         tasks = Whippet()
         params = tasks.getParameterInfo()
         #make feature layer
