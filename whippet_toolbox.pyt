@@ -336,8 +336,6 @@ class Whippet(object):
         #used for faster runs without performing certain tasks
         re_run = False
         
-        site_value_layer_described = arcpy.Describe(comparison_layers[layer]['location'])
-        
         break_options = {'distance option 1 (miles)':[[10,.1],
                                    [6,1],
                                    [3,10],
@@ -407,10 +405,12 @@ class Whippet(object):
                              }
         #see above note when setting Multi_Factor_Site_Value variable
         if Multi_Factor_Site_Value:
-            del(comparison_layers['site_value'])
             comparison_layers['partner_projects']={'location':"G:/Projects/CRISP/Dataset_Analysis/WeedData_ClackamasBasin.mdb/priority_sites_Dissolve_Dice4",'breaks':vector_breaks}
             comparison_layers['t_and_e']={'location':"G:/Projects/CRISP/Dataset_Analysis/WeedData_ClackamasBasin.mdb/T_E_2014_CCBasin_Dice",'breaks':vector_breaks}
-            comparison_layers['site_value2']={'breaks':None, 'raster':True}
+
+        site_value_layer_described = arcpy.Describe(comparison_layers['site_value']['location'])
+
+        
         #===============================================================================
         # get information on WHIPPET values
         #===============================================================================
@@ -488,8 +488,6 @@ class Whippet(object):
                             print "        not valid due to lack of points"
                         arcpy.Delete_management(risk_assessed)
                     continue
-                elif layer == 'site_value2' and Multi_Factor_Site_Value:
-                    continue
                 else:
                     if layer == "site_value":
                         #TODO add test for RASTER vs. polygon and treat accordingly
@@ -502,6 +500,7 @@ class Whippet(object):
                             arcpy.CheckOutExtension("Spatial")
                             # Execute ExtractValuesToPoints
                             ExtractValuesToPoints(prioritization_layer, comparison_layers[layer]['location'], prioritization_layer + "_withSiteValue", "NONE", "ALL")
+                            site_value_fieldname = "RASTERVALU"
                             
                             
                         arcpy.Delete_management(prioritization_layer)
@@ -566,7 +565,7 @@ class Whippet(object):
         for weed in weeds:
             if weed.isNull('conspecific_score'):
                 continue
-            if not Multi_Factor_Site_Value and weed.isNull(site_value_fieldname) and weed.getValue(site_value_fieldname) != -9999:
+            if not Multi_Factor_Site_Value and weed.isNull(site_value_fieldname):
                 #no valid site value score (-9999 is the null value for a the Extract Values to Points (used for Raster datasets)
                 continue
             
@@ -577,11 +576,11 @@ class Whippet(object):
                 conversion_num = get_conversion_num(patch_size_unit, population_breaks)
                 patch_size = weed.getValue(patch_size_fieldname)
                 
-                #===============================================================
-                # #removed due this not being in the original algorithm
-                #===============================================================
-                if not weed.isNull(percent_cover_fieldname):
-                    patch_size = patch_size * (weed.getValue(percent_cover_fieldname)/100)
+#                 #===============================================================
+#                 # #removed due this not being in the original algorithm
+#                 #===============================================================
+#                 if not weed.isNull(percent_cover_fieldname):
+#                     patch_size = patch_size * (weed.getValue(percent_cover_fieldname)/100)
                 
                 population_score = score_using_breaks(patch_size,break_options[population_breaks],conversion_num)
             
@@ -592,9 +591,15 @@ class Whippet(object):
             
             #calculate site_value
             site_value_score = float(weed.getValue(site_value_fieldname))
+            if site_value_score == -9999:
+                site_value_score = 801
+                #site_value_score = float(weed.getValue("RCS_HVH_rawscore"))
+            
+            #currently, raster site value data is expected to be normalized to 1000
             if not site_value_layer_described.dataType == "FeatureLayer":
-                #currently, raster site value data is expected to be normalized to 1000
-                site_value_score = site_value_score/1000
+                site_value_score = site_value_score/100
+            
+            #calculate multi-factor site value score using more than just site value information    
             if Multi_Factor_Site_Value:
                 site_value_score = (weights['t_and_e'] * weed.getValue("t_and_e_score") + 
                                                      weights['site_value2'] * site_value_score +  
@@ -673,11 +678,11 @@ if __name__ == '__main__':
     # This is used for debugging. Using this structure makes it much easier to debug using standard Python development tools.
 
     #switch this to a True case if you are running in debug mode, you have to switch back to a False case when loading into arcmap otherwise it will run when arcmap loads the toolbox.
-    if 1==0:
+    if 1==1:
         tasks = Whippet()
         params = tasks.getParameterInfo()
         #make feature layer
-#        arcpy.MakeFeatureLayer_management("G:/Projects/CRISP/Dataset_Analysis/WeedData_ClackamasBasin.mdb/CRISP_Weed_Observations_OregonSP","weed_point_layer")
+        #arcpy.MakeFeatureLayer_management("G:/Projects/CRISP/Dataset_Analysis/WeedData_ClackamasBasin.mdb/CRISP_Weed_Observations_OregonSP","weed_point_layer")
         arcpy.MakeFeatureLayer_management("G:/Projects/CRISP_Fall2015Update/Data/WHIPPET_Data/CRISP_Fall2015_Update.gdb/New_Data_Test1_SP_SiteValue2","weed_point_layer")
         params[0].value = "weed_point_layer" #layer to process
         params[1].value = 'scientificname'  
@@ -688,9 +693,10 @@ if __name__ == '__main__':
         params[6].value = 'area option 2 (acres)'
 
         #make feature layer
-        arcpy.MakeFeatureLayer_management("G:/Projects/CRISP/Whippet Support/New File Geodatabase.gdb/dummy_site_value","dummy_site_value")
-        params[7].value = "dummy_site_value"
-        params[8].value = "WHIPPET_VALUE"
+#         arcpy.MakeFeatureLayer_management("G:/Projects/CRISP/Whippet Support/New File Geodatabase.gdb/dummy_site_value","dummy_site_value")
+        arcpy.MakeRasterLayer_management ("G:/Projects/CRISP_Fall2015Update/Data/WHIPPET_Data/CRISP_Fall2015_Update.gdb/HVH", "site_value_raster")
+        params[7].value = "site_value_raster"
+        params[8].value = "Value"
         
         #make feature layer
         arcpy.MakeFeatureLayer_management("G:/Projects/CRISP/Dataset_Analysis/WeedData_ClackamasBasin.mdb/cc_mc_streams","streams")
