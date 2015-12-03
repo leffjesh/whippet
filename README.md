@@ -13,16 +13,9 @@ You must have ArcGIS installed in order to use this. Developed with ArcGIS 10.2.
 
 ##Setup:
 
-- Download this repository using the "Download Zip" link on the right
-- In ArcGIS right-click in ArcToolbox window and select "Add Toolbox". Then navigate to the unzipped folder that you just downloaded.  The toolbox should now appear in your ArcToolbox window.
-- You will first need to setup your species scores using the WHIPPET Species Assessment Form and placing the values into the species_scores.csv file that is included in this repository.
-- site value scores should be normalized to 1000.
-- If you don't have Accessibility data and/or Patch Size attributes for your invasive species dataset, you may still run this tool with the following modifications.  Create attributes of field type Long, Short, Double, or Float for these criteria and leave the value for each observation set to "Null".  Open the whippet_toolbox.pyt script in a text editor and modify the following values: 
-```
-default_population_score = 10
-default_accessibility_score = 3
-```
- 
-##Usage:
+1. Download this repository using the "Download Zip" link on the right
+2. In ArcGIS right-click in ArcToolbox window and select "Add Toolbox". Then navigate to the unzipped folder that you just downloaded.  The toolbox should now appear in your ArcToolbox window.
 
-Documentation remains to be gathered and/or completed before this tool is useful. 
+##More Information:
+
+Please see wiki.
