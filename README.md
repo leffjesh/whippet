@@ -33,7 +33,7 @@ Assign a score using explanations in the scoring document for the remaining spec
 
 ###Distance and Area Scoring
 
-Distances and area criteria "breaks" are used in calculating Conspecific score, Vector (mines, streams, streets) score, and Population Sizes scores with the following options: 
+Distances and area criteria "breaks" are used in calculating Conspecific score, Vector (mines, streams, streets) score, and Population Sizes scores.  The below options include defaults specified in WHIPPET manuals and others created somewhat abitrarily.  Consider changing for your own purpose by modifying the .pyt file and adding your own options.
 
 ####Conspecific Breaks
 
