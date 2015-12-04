@@ -31,6 +31,8 @@ Assign a score using explanations in the scoring document for the remaining spec
 - Control Effectiveness
 - Control Cost.
 
+In addition to calculating or verifying scores are present for your species of concern.  You also need to define species of concern.  This is done so that results are not calculated for *all* species with available scoring, though you may do so if desired.  To specify species of concern edit the "Eradication Priority" attribute in the csv file.
+
 ###Distance and Area Scoring
 
 Distances and area criteria "breaks" are used in calculating Conspecific score, Vector (mines, streams, streets) score, and Population Sizes scores.  The below options include defaults specified in WHIPPET manuals and others created somewhat abitrarily.  Consider changing for your own purpose by modifying the .pyt file and adding your own options.
