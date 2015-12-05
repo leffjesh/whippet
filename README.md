@@ -47,22 +47,22 @@ Used to score the distance of the population to other populations of the same sp
 |   |  | 6 | 0.1 | 1 |
 |   |  | 3 | 1 | 10 |
 |   |  | 1 | 10 | 25 |
-|   |  | 0 | 25 | ~ |
+|   |  | 0 | 25 | &infin; |
 | conspecifics option 2 (miles) | Mile | 10 | 0 | 0.05 |
 |   |  | 6 | 0.05 | 0.5 |
 |   |  | 3 | 0.5 | 5 |
 |   |  | 1 | 5 | 12.5 |
-|   |  | 0 | 12.5 | ~ |
+|   |  | 0 | 12.5 | &infin; |
 | conspecifics option 3 (miles) | Mile | 10 | 0 | 0.01 |
 |   |  | 6 | 0.01 | 0.05 |
 |   |  | 3 | 0.05 | 0.1 |
 |   |  | 1 | 0.1 | 1 |
-|   |  | 0 | 1 | ~ |
+|   |  | 0 | 1 | &infin; |
 | conspecifics option 4 (miles) | Mile | 10 | 0 | 0.001 |
 |   |  | 6 | 0.001 | 0.01 |
 |   |  | 3 | 0.01 | 0.1 |
 |   |  | 1 | 0.1 | 1 |
-|   |  | 0 | 1 | ~ |
+|   |  | 0 | 1 | &infin; |
 
 ####Population Breaks
 
@@ -74,17 +74,17 @@ Used to score the size of the population.
 |   |  | 6 | 0.1 | 1 |
 |   |  | 3 | 1 | 10 |
 |   |  | 1 | 10 | 100 |
-|   |  | 0 | 100 | ~ |
+|   |  | 0 | 100 | &infin; |
 | area option 2 (acres) | Acre | 10 | 0 | 0.05 |
 |   |  | 6 | 0.05 | 0.5 |
 |   |  | 3 | 0.5 | 5 |
 |   |  | 1 | 5 | 50 |
-|   |  | 0 | 50 | ~ |
+|   |  | 0 | 50 | &infin; |
 | area option 3 (acres) | Acre | 10 | 0 | 0.1 |
 |   |  | 6 | 0.1 | 0.5 |
 |   |  | 3 | 0.5 | 1 |
 |   |  | 1 | 1 | 10 |
-|   |  | 0 | 10 | ~ |
+|   |  | 0 | 10 | &infin; |
 
 
 ####Vector Breaks
@@ -97,22 +97,22 @@ Used to score the distance of a patch to a vector.
 |   |  | 6 | 0.1 | 1 |
 |   |  | 3 | 1 | 10 |
 |   |  | 1 | 10 | 25 |
-|   |  | 0 | 25 | ~ |
+|   |  | 0 | 25 | &infin; |
 | distance option 2 (miles) | Mile | 10 | 0 | 0.05 |
 |   |  | 6 | 0.05 | 0.5 |
 |   |  | 3 | 0.5 | 5 |
 |   |  | 1 | 5 | 12.5 |
-|   |  | 0 | 12.5 | ~ |
+|   |  | 0 | 12.5 | &infin; |
 | distance option 3 (miles) | Mile | 10 | 0 | 0.01 |
 |   |  | 6 | 0.01 | 0.1 |
 |   |  | 3 | 0.1 | 1 |
 |   |  | 1 | 1 | 5 |
-|   |  | 0 | 5 | ~ |
+|   |  | 0 | 5 | &infin; |
 | distance option 4 (miles) | Mile | 10 | 0 | 0.01 |
 |   |  | 6 | 0.01 | 0.05 |
 |   |  | 3 | 0.05 | 0.1 |
 |   |  | 1 | 0.1 | 1 |
-|   |  | 0 | 1 | ~ |
+|   |  | 0 | 1 | &infin; |
 
 
 ###Other usage details
