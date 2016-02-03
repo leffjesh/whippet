@@ -20,6 +20,9 @@
            -calc distance to all conspecific pops, 
            -assign populations to clusters and calc distance to nearest cluster or to all clusters
            -assign to clusters, then create a graph (think graph theory) of clusters with relevant vectors as pathways, then calculate distance to nearest neighbor along pathway
+           
+   to do:
+   -add full support for using T&E and Partner project data in addition to site value data in calculating site value (this is mostly adding it to the interface in an optional manner
    
 '''
 import arcpy
