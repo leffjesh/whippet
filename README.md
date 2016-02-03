@@ -31,6 +31,8 @@ Assign a score using explanations in the scoring document for the remaining spec
 - Control Effectiveness
 - Control Cost.
 
+In addition to calculating or verifying scores are present for your species of concern.  You also need to define species of concern.  This is done so that results are not calculated for *all* species with available scoring, though you may do so if desired.  To specify species of concern edit the "Eradication Priority" attribute in the csv file.
+
 ###Distance and Area Scoring
 
 Distances and area criteria "breaks" are used in calculating Conspecific score, Vector (mines, streams, streets) score, and Population Sizes scores.  The below options include defaults specified in WHIPPET manuals and others created somewhat abitrarily.  Consider changing for your own purpose by modifying the .pyt file and adding your own options.
@@ -45,22 +47,22 @@ Used to score the distance of the population to other populations of the same sp
 |   |  | 6 | 0.1 | 1 |
 |   |  | 3 | 1 | 10 |
 |   |  | 1 | 10 | 25 |
-|   |  | 0 | 25 | ~ |
+|   |  | 0 | 25 | &infin; |
 | conspecifics option 2 (miles) | Mile | 10 | 0 | 0.05 |
 |   |  | 6 | 0.05 | 0.5 |
 |   |  | 3 | 0.5 | 5 |
 |   |  | 1 | 5 | 12.5 |
-|   |  | 0 | 12.5 | ~ |
+|   |  | 0 | 12.5 | &infin; |
 | conspecifics option 3 (miles) | Mile | 10 | 0 | 0.01 |
 |   |  | 6 | 0.01 | 0.05 |
 |   |  | 3 | 0.05 | 0.1 |
 |   |  | 1 | 0.1 | 1 |
-|   |  | 0 | 1 | ~ |
+|   |  | 0 | 1 | &infin; |
 | conspecifics option 4 (miles) | Mile | 10 | 0 | 0.001 |
 |   |  | 6 | 0.001 | 0.01 |
 |   |  | 3 | 0.01 | 0.1 |
 |   |  | 1 | 0.1 | 1 |
-|   |  | 0 | 1 | ~ |
+|   |  | 0 | 1 | &infin; |
 
 ####Population Breaks
 
@@ -72,17 +74,17 @@ Used to score the size of the population.
 |   |  | 6 | 0.1 | 1 |
 |   |  | 3 | 1 | 10 |
 |   |  | 1 | 10 | 100 |
-|   |  | 0 | 100 | ~ |
+|   |  | 0 | 100 | &infin; |
 | area option 2 (acres) | Acre | 10 | 0 | 0.05 |
 |   |  | 6 | 0.05 | 0.5 |
 |   |  | 3 | 0.5 | 5 |
 |   |  | 1 | 5 | 50 |
-|   |  | 0 | 50 | ~ |
+|   |  | 0 | 50 | &infin; |
 | area option 3 (acres) | Acre | 10 | 0 | 0.1 |
 |   |  | 6 | 0.1 | 0.5 |
 |   |  | 3 | 0.5 | 1 |
 |   |  | 1 | 1 | 10 |
-|   |  | 0 | 10 | ~ |
+|   |  | 0 | 10 | &infin; |
 
 
 ####Vector Breaks
@@ -95,22 +97,22 @@ Used to score the distance of a patch to a vector.
 |   |  | 6 | 0.1 | 1 |
 |   |  | 3 | 1 | 10 |
 |   |  | 1 | 10 | 25 |
-|   |  | 0 | 25 | ~ |
+|   |  | 0 | 25 | &infin; |
 | distance option 2 (miles) | Mile | 10 | 0 | 0.05 |
 |   |  | 6 | 0.05 | 0.5 |
 |   |  | 3 | 0.5 | 5 |
 |   |  | 1 | 5 | 12.5 |
-|   |  | 0 | 12.5 | ~ |
+|   |  | 0 | 12.5 | &infin; |
 | distance option 3 (miles) | Mile | 10 | 0 | 0.01 |
 |   |  | 6 | 0.01 | 0.1 |
 |   |  | 3 | 0.1 | 1 |
 |   |  | 1 | 1 | 5 |
-|   |  | 0 | 5 | ~ |
+|   |  | 0 | 5 | &infin; |
 | distance option 4 (miles) | Mile | 10 | 0 | 0.01 |
 |   |  | 6 | 0.01 | 0.05 |
 |   |  | 3 | 0.05 | 0.1 |
 |   |  | 1 | 0.1 | 1 |
-|   |  | 0 | 1 | ~ |
+|   |  | 0 | 1 | &infin; |
 
 
 ###Other usage details
@@ -126,3 +128,7 @@ default_accessibility_score = 3
 ##Caveats
 
 - This was tested using only sq. feet patch size data.
+
+##Results
+
+This tool creates a folder "results" inside your WHIPPPET toolbox folder.  Inside this folder are timestamped folders with all the runs you have made with this tool.  Inside the run folder is a file geodatabase with the resulting "target_weed_points_thinned_withSiteValue" feature class.  This layer will automatically be loaded into your current arcmap document.  The layer contains scoring details for this run.
