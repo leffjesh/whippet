@@ -28,6 +28,16 @@
    
    -add full support for using T&E and Partner project data in addition to site value data in calculating site value (this is mostly adding it to the interface in an optional manner
    
+   
+   ----new fork----
+   transition to polygon based observation data
+       -eliminates challenge of converting polygons to points (different implentations with different consquences)
+       -points can be buffers
+       -eliminates issues of overlapping observations
+   result will be a raster dataset for each species and one for all species (maybe ones for the three main categories too)
+       -rasters are easier to communicate results
+   
+   
 '''
 import arcpy
 from arcpy.sa import *
@@ -110,21 +120,23 @@ def vector_scored (risk_scores,weights,values):
 
 def calculate_scores(source_layer, target_layer,layer_name,breaks, conversion_num):
     try:
+        #add fields, for below test
         fields = []
         fieldList = arcpy.ListFields(source_layer)
         for field in fieldList:
             fields.append(field.name)
             
-        arcpy.Near_analysis(source_layer,target_layer)
+        arcpy.GenerateNearTable_analysis(source_layer,target_layer,"in_memory/near_table","NO_LOCATION","NO_ANGLE","ALL","999999")
         
+        #add score attribute
         if not layer_name+"_score" in fields:
             arcpy.AddField_management(source_layer,layer_name+"_score","SHORT")
             
         arcpy.DeleteField_management (source_layer,"NEAR_FID")
         
-        weeds = arcpy.UpdateCursor(source_layer)
-        for weed in weeds:
-            weed.setValue(layer_name+"_score",score_using_breaks(weed.getValue("NEAR_DIST"), breaks, conversion_num) )
+        populations = arcpy.UpdateCursor(source_layer)
+        for population in populations:
+            weed.setValue(layer_name+"_score",score_using_breaks(population.getValue("NEAR_DIST"), breaks, conversion_num) )
             weeds.updateRow(weed)
         
         arcpy.DeleteField_management (source_layer,"NEAR_DIST")
@@ -245,8 +257,7 @@ class Whippet(object):
             direction="Input")
 
 
-        
-        param0.filter.list = ["Point"]
+        param0.filter.list = ["Polygon"]
         
         # Set the filter to accept only fields that are Short or Long type
         param1.filter.list = ['Text']
@@ -272,7 +283,8 @@ class Whippet(object):
         param12.filter.list=['distance option 1 (miles)',
                             'distance option 2 (miles)',
                             'distance option 3 (miles)',
-                            'distance option 4 (miles)'
+                            'distance option 4 (miles)',
+                            'distance option 5 (miles)'
                             ]  
         
         param5.defaultEnvironmentName='conspecifics option 1 (miles)'
@@ -363,6 +375,11 @@ class Whippet(object):
                                    [3,.1],
                                    [1,1],
                                    [0]],
+                         'distance option 5 (miles)':[[10,.025],
+                                   [6,.05],
+                                   [3,.1],
+                                   [1,.2],
+                                   [0]],
                          'conspecifics option 1 (miles)':[[0,.1],
                                    [1,1],
                                    [3,10],
@@ -399,6 +416,7 @@ class Whippet(object):
                                       [1,10],
                                       [0]]
                          }
+        
         comparison_layers = {
                              'streets':{'location':streets,
                                         'breaks':vector_breaks},
@@ -410,6 +428,7 @@ class Whippet(object):
                                         'breaks':None},
                              'conspecifics':{'breaks':conspecific_breaks}
                              }
+        
         #see above note when setting Multi_Factor_Site_Value variable
         if Multi_Factor_Site_Value:
             comparison_layers['partner_projects']={'location':"G:/Projects/CRISP/Dataset_Analysis/WeedData_ClackamasBasin.mdb/priority_sites_Dissolve_Dice4",'breaks':vector_breaks}
@@ -455,12 +474,11 @@ class Whippet(object):
             #===========================================================================
             # copy prioritization layer into new geodb, filter out only relevant species records
             #===========================================================================
-            arcpy.CopyFeatures_management(prioritization_layer,out_gdb+"/all_weed_points")
+            arcpy.CopyFeatures_management(prioritization_layer,out_gdb+"/all_weed_poly")
             sql = " OR ".join(map(lambda x: "\""+scientific_fieldname+"\" = '" + x + "'", risk_scores.keys()))
-            arcpy.MakeFeatureLayer_management(out_gdb+"/all_weed_points", "weed_points2",sql)
-            arcpy.CopyFeatures_management("weed_points2",out_gdb+"/target_weed_points")
-            arcpy.CopyFeatures_management("weed_points2",out_gdb+"/target_weed_points_thinned") #not thinned yet, but will be
-            prioritization_layer= out_gdb+"/target_weed_points_thinned"
+            arcpy.MakeFeatureLayer_management(out_gdb+"/all_weed_poly", "weed_poly2",sql)
+            arcpy.CopyFeatures_management("weed_poly2",out_gdb+"/target_weed_poly")
+            prioritization_layer= out_gdb+"/target_weed_poly"
             
             sr = arcpy.Describe(prioritization_layer).spatialReference
             prioritization_layer_linear_unit = sr.linearUnitName 
@@ -476,9 +494,6 @@ class Whippet(object):
                 print layer + "\n"
                 if layer == 'conspecifics':
                     
-                    #this logic reduces the density of points
-                    arcpy.DeleteIdentical_management(prioritization_layer, ["Shape", scientific_fieldname], "33 Feet")
-                    
                     #loop through species with WHIPPET scores, test if they are in dataset, setup layers for those that are
                     for risk_assessed in risk_scores:
                         risk_assessed_raw = risk_assessed
@@ -488,7 +503,7 @@ class Whippet(object):
                         print "checking " + risk_assessed_raw
                         arcpy.MakeFeatureLayer_management(prioritization_layer,risk_assessed, "\"" + scientific_fieldname + "\" = '"+risk_assessed_raw+"'","in_memory")
                         result = arcpy.GetCount_management(risk_assessed)
-                        if int(result.getOutput(0)) >0:
+                        if int(result.getOutput(0)) >0: #features present for this species
                             calculate_scores(risk_assessed,risk_assessed, "conspecific", break_options[ comparison_layers[layer]['breaks']],get_conversion_num(prioritization_layer_linear_unit, comparison_layers[layer]['breaks'] ) )
                             print "        valid for this dataset\n"
                         else:
