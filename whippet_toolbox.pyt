@@ -151,7 +151,7 @@ class Toolbox(object):
         .pyt file)."""
         self.label = "Whippet_Toolbox"
         self.alias = ""
-        # List of tool classes associated with this toolbox
+        # List of tool classes associated  with this toolbox
         self.tools = [Whippet]
         
         
