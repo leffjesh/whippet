@@ -126,7 +126,7 @@ def calculate_scores(source_layer, target_layer,layer_name,breaks, conversion_nu
         for field in fieldList:
             fields.append(field.name)
             
-        arcpy.GenerateNearTable_analysis(source_layer,target_layer,"in_memory/near_table","NO_LOCATION","NO_ANGLE","ALL","999999")
+        arcpy.GenerateNearTable_analysis(source_layer,target_layer)
         
         #add score attribute
         if not layer_name+"_score" in fields:
@@ -335,7 +335,7 @@ class Whippet(object):
         patch_size_fieldname = str(parameters[2].value)
         accessibility_fieldname = str(parameters[3].value)
         patch_size_unit = str(parameters[4].value)
-        percent_cover_fieldname = "obsPercentCover" #removed due to it not being in the original model
+#         percent_cover_fieldname = "obsPercentCover" #removed due to it not being in the original model
         conspecific_breaks = str(parameters[5].value)
         population_breaks = str(parameters[6].value)
         site_value = parameters[7].value
@@ -348,10 +348,8 @@ class Whippet(object):
         #defaults, you may want to change these depending on your dataset, we calculated the median for our populations with pop size data and used that resulting score
         default_population_score = 10
         default_accessibility_score = 3
-        
-        #used when you are using a separate method for site_value calculation, set to False as default
-        Multi_Factor_Site_Value = False
-        
+        default_site_value = 3
+                
         #used for faster runs without performing certain tasks
         re_run = False
         
@@ -429,11 +427,6 @@ class Whippet(object):
                              'conspecifics':{'breaks':conspecific_breaks}
                              }
         
-        #see above note when setting Multi_Factor_Site_Value variable
-        if Multi_Factor_Site_Value:
-            comparison_layers['partner_projects']={'location':"G:/Projects/CRISP/Dataset_Analysis/WeedData_ClackamasBasin.mdb/priority_sites_Dissolve_Dice4",'breaks':vector_breaks}
-            comparison_layers['t_and_e']={'location':"G:/Projects/CRISP/Dataset_Analysis/WeedData_ClackamasBasin.mdb/T_E_2014_CCBasin_Dice",'breaks':vector_breaks}
-
         site_value_layer_described = arcpy.Describe(comparison_layers['site_value']['location'])
 
         
@@ -474,11 +467,13 @@ class Whippet(object):
             #===========================================================================
             # copy prioritization layer into new geodb, filter out only relevant species records
             #===========================================================================
-            arcpy.CopyFeatures_management(prioritization_layer,out_gdb+"/all_weed_poly")
+            arcpy.CopyFeatures_management(prioritization_layer,out_gdb+"/all_weed_points")
+            # creates an SQL WHERE clause with all weeds designated in .csv file
             sql = " OR ".join(map(lambda x: "\""+scientific_fieldname+"\" = '" + x + "'", risk_scores.keys()))
-            arcpy.MakeFeatureLayer_management(out_gdb+"/all_weed_poly", "weed_poly2",sql)
-            arcpy.CopyFeatures_management("weed_poly2",out_gdb+"/target_weed_poly")
-            prioritization_layer= out_gdb+"/target_weed_poly"
+            arcpy.MakeFeatureLayer_management(out_gdb+"/all_weed_points", "weed_points2",sql)
+            arcpy.CopyFeatures_management("weed_points2",out_gdb+"/target_weed_points")
+            arcpy.CopyFeatures_management("weed_points2",out_gdb+"/target_weed_points_thinned") #not thinned yet, but will be
+            prioritization_layer= out_gdb+"/target_weed_points_thinned"
             
             sr = arcpy.Describe(prioritization_layer).spatialReference
             prioritization_layer_linear_unit = sr.linearUnitName 
@@ -493,6 +488,8 @@ class Whippet(object):
             for layer in comparison_layers:
                 print layer + "\n"
                 if layer == 'conspecifics':
+                    arcpy.DeleteIdentical_management(prioritization_layer, ["Shape", scientific_fieldname], "33 Feet")
+                    #arcpy.DeleteIdentical_management(prioritization_layer, ["Shape", scientific_fieldname], "328 Feet")
                     
                     #loop through species with WHIPPET scores, test if they are in dataset, setup layers for those that are
                     for risk_assessed in risk_scores:
@@ -539,36 +536,30 @@ class Whippet(object):
                         calculate_scores(prioritization_layer,out_gdb+"/" + layer,layer, break_options[comparison_layers[layer]['breaks']], get_conversion_num(prioritization_layer_linear_unit, comparison_layers[layer]['breaks'] ) )
         else:
             #use already calculated scores for faster testing of subsequent codebase
-            prioritization_layer="" 
-            out_gdb = ""
-            Geodb_folder = ""
+            prioritization_layer="" #define here
+            out_gdb = "" #define here
+            Geodb_folder = "" #define here
         
         
         weights = {
                 'impact':.378,
-                    'impact_to_wildlands':.483,
-                    'site_value':.517,
-                'invasiveness':.229,
-                    'conspecifics':.378,
-                    'rate_of_spread':.393,
-                    'distance':.229,
-                        'streets':.333,
-                        'rivers':.425,
-                        'mines':.243,
+                    'impact_to_wildlands':.483, #.18
+                    'site_value':.517, #.195 (.45 - RCS HVH, .45 partner project, .1 RTE)
+                'invasiveness':.229, 
+                    'conspecifics':.378, #.086
+                    'rate_of_spread':.393, #.089
+                    'distance':.229, 
+                        'streets':.333, #.017
+                        'rivers':.425, #.022
+                        'mines':.243, #.012
                 'feasibility':.393,
-                    'population_size':.253,
-                    'reproductive_ability':.177,
-                    'detectablility':.125,
-                    'accessibility':.150,
-                    'control_effectiveness':.190,
-                    'control_cost':.105       
+                    'population_size':.253, #.099
+                    'reproductive_ability':.177, #.069
+                    'detectablility':.125, #.049
+                    'accessibility':.150, #.058
+                    'control_effectiveness':.190, #.074
+                    'control_cost':.105 #.041
                  }   
-        
-        if Multi_Factor_Site_Value:
-            #weight are used as percentages of score for site value
-            weights['t_and_e']=.1
-            weights['partner_projects']=.45
-            weights['site_value2']=.45
 
         #===============================================================================
         # calculate population scores for each row
@@ -587,9 +578,9 @@ class Whippet(object):
         for weed in weeds:
             if weed.isNull('conspecific_score'):
                 continue
-            if not Multi_Factor_Site_Value and weed.isNull(site_value_fieldname):
-                #no valid site value score (-9999 is the null value for a the Extract Values to Points (used for Raster datasets)
-                continue
+#             if not Multi_Factor_Site_Value and weed.isNull(site_value_fieldname):
+#                 #no valid site value score (-9999 is the null value for a the Extract Values to Points (used for Raster datasets)
+#                 continue
             
             weed_name = weed.getValue(scientific_fieldname)
             if weed.isNull(patch_size_fieldname) or weed.getValue(patch_size_fieldname) == 0 or 1==0:
@@ -614,19 +605,9 @@ class Whippet(object):
             #calculate site_value
             site_value_score = float(weed.getValue(site_value_fieldname))
             if site_value_score == -9999:
-                site_value_score = 801
-                #site_value_score = float(weed.getValue("RCS_HVH_rawscore"))
-            
-            #currently, raster site value data is expected to be normalized to 1000
-            if not site_value_layer_described.dataType == "FeatureLayer":
-                site_value_score = site_value_score/100
+                site_value_score = default_site_value
             
             #calculate multi-factor site value score using more than just site value information    
-            if Multi_Factor_Site_Value:
-                site_value_score = (weights['t_and_e'] * weed.getValue("t_and_e_score") + 
-                                                     weights['site_value2'] * site_value_score +  
-                                                     weights['partner_projects'] * weed.getValue("partner_projects_score"))
-            
             impact_score =( weights['impact'] * ( weights['impact_to_wildlands'] * int(risk_scores[weed_name][1]) + 
                                               weights['site_value'] *  site_value_score  ))
             
@@ -700,34 +681,34 @@ if __name__ == '__main__':
     # This is used for debugging. Using this structure makes it much easier to debug using standard Python development tools.
 
     #switch this to a True case if you are running in debug mode, you have to switch back to a False case when loading into arcmap otherwise it will run when arcmap loads the toolbox.
-    if 1==0:
+    if 1==1:
         tasks = Whippet()
         params = tasks.getParameterInfo()
         #make feature layer
         #arcpy.MakeFeatureLayer_management("G:/Projects/CRISP/Dataset_Analysis/WeedData_ClackamasBasin.mdb/CRISP_Weed_Observations_OregonSP","weed_point_layer")
-        arcpy.MakeFeatureLayer_management("G:/Projects/CRISP_Fall2015Update/Data/WHIPPET_Data/CRISP_Fall2015_Update.gdb/New_Data_Test1_SP_SiteValue2","weed_point_layer")
+        arcpy.MakeFeatureLayer_management("G:/Projects/CRISP/Whippet Support/Spring2018_RasterRevision/TESTING.gdb/CRISP_Weed_Observations_December2017","weed_point_layer")
         params[0].value = "weed_point_layer" #layer to process
         params[1].value = 'scientificname'  
         params[2].value = 'obsPatchSize'  
-        params[3].value = "digitalPhoto5"#just using an attribute with all null values for testing "accessibility_score"
+        params[3].value = "accessibility_score" 
         params[4].value = "square feet"
         params[5].value = 'conspecifics option 2 (miles)'
         params[6].value = 'area option 2 (acres)'
 
         #make feature layer
 #         arcpy.MakeFeatureLayer_management("G:/Projects/CRISP/Whippet Support/New File Geodatabase.gdb/dummy_site_value","dummy_site_value")
-        arcpy.MakeRasterLayer_management ("G:/Projects/CRISP_Fall2015Update/Data/WHIPPET_Data/CRISP_Fall2015_Update.gdb/HVH", "site_value_raster")
+        arcpy.MakeRasterLayer_management ("G:/Projects/CRISP/Whippet Support/Spring2018_RasterRevision/Spring2018_Weed_PTool.gdb/SiteValue_MosaicDataset_1", "site_value_raster")
         params[7].value = "site_value_raster"
-        params[8].value = "Value"
+        params[8].value = "Pixel"
         
         #make feature layer
-        arcpy.MakeFeatureLayer_management("G:/Projects/CRISP/Dataset_Analysis/WeedData_ClackamasBasin.mdb/cc_mc_streams","streams")
+        arcpy.MakeFeatureLayer_management("G:/Projects/CRISP/Whippet Support/Spring2018_RasterRevision/Spring2018_Weed_PTool.gdb/cc_mc_streams","streams")
         params[9].value = "streams"
         #make feature layer
-        arcpy.MakeFeatureLayer_management("G:/Projects/CRISP/Dataset_Analysis/WeedData_ClackamasBasin.mdb/cc_basin_streets","streets")
+        arcpy.MakeFeatureLayer_management("G:/Projects/CRISP/Whippet Support/Spring2018_RasterRevision/Spring2018_Weed_PTool.gdb/cc_basin_streets_10milebuffer_noDecom","streets")
         params[10].value = "streets"
         #make feature layer
-        arcpy.MakeFeatureLayer_management("G:/Projects/CRISP/Dataset_Analysis/WeedData_ClackamasBasin.mdb/cc_basin_mines","mines")
+        arcpy.MakeFeatureLayer_management("G:/Projects/CRISP/Whippet Support/Spring2018_RasterRevision/Spring2018_Weed_PTool.gdb/cc_basin_mines","mines")
         params[11].value = "mines"
         
         params[12].value = 'distance option 2 (miles)'
